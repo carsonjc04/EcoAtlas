@@ -1,0 +1,16 @@
+{
+  "id": "hs-002",
+  "title": "Bleaching Events Cluster in the Northern Reefs",
+  "summary": "Marine surveys show repeated bleaching events in the northern sections, with warming anomalies persisting longer than average.",
+  "sources": [
+    "https://example.org/reef-survey",
+    "https://example.org/ocean-temps"
+  ],
+  "series": [
+    { "year": 2019, "value": 65 },
+    { "year": 2020, "value": 72 },
+    { "year": 2021, "value": 80 },
+    { "year": 2022, "value": 88 }
+  ]
+}
+

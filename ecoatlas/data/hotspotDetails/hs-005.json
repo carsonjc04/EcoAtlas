@@ -1,0 +1,29 @@
+{
+  "id": "hs-005",
+  "story": {
+    "headline": "Summer Sea Ice Minimums Keep Shrinking",
+    "summary": "Arctic summer sea ice extent has declined steadily, exposing darker ocean water for longer periods each year.",
+    "climateImpact": "Warming temperatures melt sea ice, and the darker ocean absorbs more heat, amplifying global warming.",
+    "causeEffect": [
+      "Rising air and ocean temperatures melt ice",
+      "Loss of reflective ice reduces albedo",
+      "More solar energy is absorbed by the ocean",
+      "Regional warming accelerates further melt"
+    ],
+    "scaleContext": "The Arctic is warming several times faster than the global average, affecting weather patterns worldwide.",
+    "outlook": "Continued warming risks nearly ice-free summers, disrupting ecosystems and coastal communities."
+  },
+  "title": "Summer Sea Ice Minimums Keep Shrinking",
+  "summary": "Arctic summer sea ice extent has declined steadily, exposing darker ocean water for longer periods each year.",
+  "sources": [
+    "https://example.org/arctic-ice-brief",
+    "https://example.org/sea-ice-trends"
+  ],
+  "series": [
+    { "year": 2019, "value": 4.1 },
+    { "year": 2020, "value": 3.8 },
+    { "year": 2021, "value": 4.2 },
+    { "year": 2022, "value": 3.9 }
+  ]
+}
+

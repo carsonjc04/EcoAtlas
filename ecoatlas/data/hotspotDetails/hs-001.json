@@ -1,0 +1,29 @@
+{
+  "id": "hs-001",
+  "story": {
+    "headline": "Forest Loss Accelerates Along New Road Corridors",
+    "summary": "Recent satellite readings show increasing canopy loss near expanding road networks. Local groups are calling for stricter enforcement and monitoring.",
+    "climateImpact": "Deforestation releases stored carbon and reduces the forest’s capacity to absorb CO₂, accelerating global warming.",
+    "causeEffect": [
+      "Road access expands logging and land clearing",
+      "Tree loss reduces carbon storage",
+      "More CO₂ stays in the atmosphere",
+      "Regional warming and drying increase fire risk"
+    ],
+    "scaleContext": "The Amazon stores billions of tons of carbon; small percentage losses translate into large emissions.",
+    "outlook": "If current clearing rates persist, the region could shift from a carbon sink to a net source."
+  },
+  "title": "Forest Loss Accelerates Along New Road Corridors",
+  "summary": "Recent satellite readings show increasing canopy loss near expanding road networks. Local groups are calling for stricter enforcement and monitoring.",
+  "sources": [
+    "https://example.org/amazon-report",
+    "https://example.org/satellite-brief"
+  ],
+  "series": [
+    { "year": 2019, "value": 42 },
+    { "year": 2020, "value": 50 },
+    { "year": 2021, "value": 61 },
+    { "year": 2022, "value": 74 }
+  ]
+}
+

@@ -1,0 +1,28 @@
+{
+  "id": "hs-007",
+  "story": {
+    "headline": "Peatland Drainage Drives Persistent Emissions",
+    "summary": "Drained peatlands release stored carbon through oxidation and fires, creating long-lived emissions sources.",
+    "climateImpact": "Peat soils store large carbon stocks; when drained or burned, they emit CO₂ and amplify global warming.",
+    "causeEffect": [
+      "Drainage lowers water tables",
+      "Exposed peat oxidizes and releases CO₂",
+      "Dry conditions increase fire risk",
+      "Emissions persist year after year"
+    ],
+    "scaleContext": "Southeast Asian peatlands hold some of the densest carbon stocks on Earth.",
+    "outlook": "Without restoration, emissions continue and fire seasons become more severe."
+  },
+  "title": "Peatland Drainage Drives Persistent Emissions",
+  "summary": "Drained peatlands release stored carbon through oxidation and fires, creating long-lived emissions sources.",
+  "sources": [
+    "https://example.org/peatland-brief"
+  ],
+  "series": [
+    { "year": 2019, "value": 780 },
+    { "year": 2020, "value": 820 },
+    { "year": 2021, "value": 790 },
+    { "year": 2022, "value": 810 }
+  ]
+}
+

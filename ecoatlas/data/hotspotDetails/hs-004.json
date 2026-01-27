@@ -1,0 +1,16 @@
+{
+  "id": "hs-004",
+  "title": "Grazing Pressure Drives Soil Degradation",
+  "summary": "Shrinking vegetation belts are linked to overgrazing and reduced rainfall, increasing dust and erosion.",
+  "sources": [
+    "https://example.org/sahel-update",
+    "https://example.org/land-use-study"
+  ],
+  "series": [
+    { "year": 2019, "value": 18 },
+    { "year": 2020, "value": 22 },
+    { "year": 2021, "value": 25 },
+    { "year": 2022, "value": 29 }
+  ]
+}
+

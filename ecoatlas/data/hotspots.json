@@ -1,0 +1,66 @@
+[
+  {
+    "id": "hs-001",
+    "name": "Amazon Basin",
+    "lat": -3.4653,
+    "lng": -62.2159,
+    "severity": 4,
+    "topic": "Deforestation",
+    "type": "driver"
+  },
+  {
+    "id": "hs-002",
+    "name": "Great Barrier Reef",
+    "lat": -18.2871,
+    "lng": 147.6992,
+    "severity": 5,
+    "topic": "Coral Bleaching",
+    "type": "impact"
+  },
+  {
+    "id": "hs-003",
+    "name": "California Coast",
+    "lat": 36.7783,
+    "lng": -119.4179,
+    "severity": 3,
+    "topic": "Wildfires",
+    "type": "impact"
+  },
+  {
+    "id": "hs-004",
+    "name": "Sahara Fringe",
+    "lat": 15.4542,
+    "lng": 18.7322,
+    "severity": 2,
+    "topic": "Desertification",
+    "type": "impact"
+  },
+  {
+    "id": "hs-005",
+    "name": "Arctic Sea Ice",
+    "lat": 78.0,
+    "lng": 15.0,
+    "severity": 5,
+    "topic": "Sea Ice Loss",
+    "type": "impact"
+  },
+  {
+    "id": "hs-007",
+    "name": "Southeast Asian Peatlands",
+    "lat": -2.0,
+    "lng": 113.0,
+    "severity": 4,
+    "topic": "Peatland Emissions",
+    "type": "driver"
+  },
+  {
+    "id": "hs-012",
+    "name": "West Siberian Gas",
+    "lat": 60.0,
+    "lng": 75.0,
+    "severity": 4,
+    "topic": "Methane Leakage",
+    "type": "driver"
+  }
+]
+

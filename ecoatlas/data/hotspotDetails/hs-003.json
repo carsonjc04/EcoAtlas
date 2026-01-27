@@ -1,0 +1,16 @@
+{
+  "id": "hs-003",
+  "title": "Extended Fire Season Strains Local Response",
+  "summary": "Dry conditions and sustained heat are prolonging the fire season and increasing pressure on local response capacity.",
+  "sources": [
+    "https://example.org/fire-brief",
+    "https://example.org/climate-outlook"
+  ],
+  "series": [
+    { "year": 2019, "value": 30 },
+    { "year": 2020, "value": 47 },
+    { "year": 2021, "value": 53 },
+    { "year": 2022, "value": 66 }
+  ]
+}
+

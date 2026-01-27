@@ -1,0 +1,28 @@
+{
+  "id": "hs-012",
+  "story": {
+    "headline": "Methane Leakage Intensifies Warming",
+    "summary": "Leakage from gas extraction and transport adds a potent greenhouse gas to the atmosphere.",
+    "climateImpact": "Methane is far more heat-trapping than CO₂ over the short term, accelerating near-term warming.",
+    "causeEffect": [
+      "Extraction and processing increase leakage risk",
+      "Methane escapes during transport",
+      "Short-term warming accelerates",
+      "Regional climate impacts intensify"
+    ],
+    "scaleContext": "West Siberian infrastructure spans vast distances, increasing leak points across the network.",
+    "outlook": "Without mitigation, leakage keeps warming on a fast trajectory."
+  },
+  "title": "Methane Leakage Intensifies Warming",
+  "summary": "Leakage from gas extraction and transport adds a potent greenhouse gas to the atmosphere.",
+  "sources": [
+    "https://example.org/methane-brief"
+  ],
+  "series": [
+    { "year": 2019, "value": 11.8 },
+    { "year": 2020, "value": 12.3 },
+    { "year": 2021, "value": 12.1 },
+    { "year": 2022, "value": 12.6 }
+  ]
+}
+
