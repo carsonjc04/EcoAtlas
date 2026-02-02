@@ -1,23 +1,31 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+type TabKey = "story" | "data" | "trends" | "layers" | "sources";
 
 type SidebarProps = {
   title: string;
   subtitle: string;
   badgeLabel?: string;
-  activeTab: "story" | "data" | "sources";
-  onTabChange: (tab: "story" | "data" | "sources") => void;
+  activeTab: TabKey;
+  onTabChange: (tab: TabKey) => void;
   onClose?: () => void;
   story: ReactNode;
   data: ReactNode;
+  trends: ReactNode;
+  layers: ReactNode;
   sources: ReactNode;
 };
+
+const tabs: { key: TabKey; label: string }[] = [
+  { key: "story", label: "Story" },
+  { key: "data", label: "Data" },
+  { key: "trends", label: "Trends" },
+  { key: "layers", label: "Layers" },
+  { key: "sources", label: "Sources" },
+];
 
 export default function Sidebar({
   title,
@@ -28,79 +36,119 @@ export default function Sidebar({
   onClose,
   story,
   data,
+  trends,
+  layers,
   sources,
 }: SidebarProps) {
   return (
     <aside
-      className={[
-        "w-[420px] max-w-full",
-        "h-full",
-        "rounded-2xl border border-white/10 bg-black/55 backdrop-blur-xl",
-        "shadow-2xl",
-      ].join(" ")}
+      style={{
+        width: 420,
+        maxWidth: "100%",
+        height: "100%",
+        paddingTop: 60, // Space for the persistent header
+        borderRight: "1px solid rgba(255,255,255,0.1)",
+        backgroundColor: "#1a1a1a",
+        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
-      <div className="flex items-start justify-between gap-3 p-4">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="truncate text-lg font-semibold leading-tight text-white">
-              {title}
-            </h2>
-            {badgeLabel && <Badge variant="secondary">{badgeLabel}</Badge>}
-          </div>
-          <p className="mt-1 text-xs tracking-wide text-white/70">
-            {subtitle}
-          </p>
-        </div>
+      {/* Tab navigation bar */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          backgroundColor: "#141414",
+        }}
+      >
+        <nav style={{ display: "flex" }}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => onTabChange(tab.key)}
+              style={{
+                padding: "12px 16px",
+                fontSize: 14,
+                fontWeight: 500,
+                color: activeTab === tab.key ? "#ffffff" : "#9ca3af",
+                backgroundColor: "transparent",
+                border: "none",
+                borderBottom: activeTab === tab.key ? "2px solid #ffffff" : "2px solid transparent",
+                cursor: "pointer",
+                transition: "color 0.15s, border-color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== tab.key) {
+                  e.currentTarget.style.color = "#ffffff";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== tab.key) {
+                  e.currentTarget.style.color = "#9ca3af";
+                }
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
 
         {onClose && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white/80 hover:text-white"
+          <button
+            type="button"
             onClick={onClose}
+            style={{
+              marginLeft: "auto",
+              padding: "12px 16px",
+              color: "#9ca3af",
+              backgroundColor: "transparent",
+              border: "none",
+              cursor: "pointer",
+            }}
+            aria-label="Collapse sidebar"
           >
-            Close
-          </Button>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="11 17 6 12 11 7" />
+              <polyline points="18 17 13 12 18 7" />
+            </svg>
+          </button>
         )}
       </div>
 
-      <Separator className="bg-white/10" />
-
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) =>
-          onTabChange(value as "story" | "data" | "sources")
-        }
-        className="flex h-[calc(100%-64px)] flex-col"
+      {/* Title section */}
+      <div
+        style={{
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          padding: "16px 20px",
+        }}
       >
-        <div className="p-4 pb-2">
-          <TabsList className="grid w-full grid-cols-3 border border-white/10 bg-white/5">
-            <TabsTrigger className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white" value="story">
-              Story
-            </TabsTrigger>
-            <TabsTrigger className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white" value="data">
-              Data
-            </TabsTrigger>
-            <TabsTrigger className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white" value="sources">
-              Sources
-            </TabsTrigger>
-          </TabsList>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#ffffff", margin: 0 }}>
+          {title}
+        </h2>
+        <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
+          {badgeLabel && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: "#60a5fa" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#60a5fa" }} />
+              {badgeLabel}
+            </span>
+          )}
+          <span style={{ fontSize: 14, color: "#9ca3af" }}>{subtitle}</span>
         </div>
+      </div>
 
-        <ScrollArea className="flex-1">
-          <div className="px-6 py-5">
-            <TabsContent value="story" className="m-0">
-              {story}
-            </TabsContent>
-            <TabsContent value="data" className="m-0">
-              {data}
-            </TabsContent>
-            <TabsContent value="sources" className="m-0">
-              {sources}
-            </TabsContent>
-          </div>
-        </ScrollArea>
-      </Tabs>
+      {/* Content area */}
+      <ScrollArea className="flex-1" style={{ backgroundColor: "#1a1a1a" }}>
+        <div style={{ padding: "16px 20px" }}>
+          {activeTab === "story" && story}
+          {activeTab === "data" && data}
+          {activeTab === "trends" && trends}
+          {activeTab === "layers" && layers}
+          {activeTab === "sources" && sources}
+        </div>
+      </ScrollArea>
     </aside>
   );
 }
