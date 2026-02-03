@@ -126,6 +126,319 @@ function useClimateClock() {
   };
 }
 
+// ============================================
+// Climate Time Machine - Utility Functions
+// ============================================
+
+// Color interpolation helper
+function interpolateColor(color1: string, color2: string, progress: number): string {
+  const hex2rgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16),
+        }
+      : { r: 0, g: 0, b: 0 };
+  };
+
+  const c1 = hex2rgb(color1);
+  const c2 = hex2rgb(color2);
+
+  const r = Math.round(c1.r + (c2.r - c1.r) * progress);
+  const g = Math.round(c1.g + (c2.g - c1.g) * progress);
+  const b = Math.round(c1.b + (c2.b - c1.b) * progress);
+
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// Calculate hotspot size based on year
+function getHotspotSizeForYear(
+  year: number,
+  type: "driver" | "impact",
+  severity: number,
+  baseSize: number
+): number {
+  const progress = (year - 1990) / (2050 - 1990);
+
+  if (type === "driver") {
+    // Drivers grow over time (worsen)
+    return baseSize * (0.6 + progress * severity * 0.15);
+  } else {
+    // Impacts: high severity worsens, low severity improves
+    const trend = severity >= 3 ? 0.8 : -0.3;
+    return baseSize * (0.8 + progress * trend * 0.3);
+  }
+}
+
+// Calculate hotspot color based on year
+function getHotspotColorForYear(
+  year: number,
+  type: "driver" | "impact",
+  severity: number,
+  opacity: number = 0.25
+): string {
+  const progress = (year - 1990) / (2050 - 1990);
+
+  if (type === "driver") {
+    // Orange (1990) → Crimson (2024) → Dark Red (2050)
+    const color = interpolateColor("#FFD580", "#8B0000", progress);
+    return color.replace("rgb", "rgba").replace(")", `, ${opacity})`);
+  } else {
+    // Impacts vary based on severity
+    if (severity >= 3) {
+      // Worsening: Light blue → Dark blue
+      const color = interpolateColor("#87CEEB", "#1e3a5f", progress);
+      return color.replace("rgb", "rgba").replace(")", `, ${opacity})`);
+    }
+    // Improving: Dark blue → Light blue
+    const color = interpolateColor("#1e3a5f", "#87CEEB", progress);
+    return color.replace("rgb", "rgba").replace(")", `, ${opacity})`);
+  }
+}
+
+// Ring color function for year-based visualization
+function getRingColorForYear(
+  year: number,
+  type: "driver" | "impact",
+  severity: number
+): (t: number) => string {
+  const progress = (year - 1990) / (2050 - 1990);
+
+  return (t: number) => {
+    const fadeOpacity = 0.6 * (1 - t);
+
+    if (type === "driver") {
+      const color = interpolateColor("#FFD580", "#8B0000", progress);
+      return color.replace("rgb", "rgba").replace(")", `, ${fadeOpacity})`);
+    } else {
+      if (severity >= 3) {
+        const color = interpolateColor("#87CEEB", "#1e3a5f", progress);
+        return color.replace("rgb", "rgba").replace(")", `, ${fadeOpacity})`);
+      }
+      const color = interpolateColor("#1e3a5f", "#87CEEB", progress);
+      return color.replace("rgb", "rgba").replace(")", `, ${fadeOpacity})`);
+    }
+  };
+}
+
+// Time dial milestone markers
+const TIME_DIAL_MILESTONES = [
+  { year: 1990, label: "1990" },
+  { year: 2000, label: "2000" },
+  { year: 2015, label: "Paris" },
+  { year: 2024, label: "Now" },
+  { year: 2030, label: "2030" },
+  { year: 2050, label: "2050" },
+];
+
+// TimeDial Component
+type TimeDialProps = {
+  currentYear: number;
+  targetYear: number;
+  isDragging: boolean;
+  onInput: (year: number) => void;
+  onChange: (year: number) => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+};
+
+function TimeDial({
+  currentYear,
+  targetYear,
+  isDragging,
+  onInput,
+  onChange,
+  onDragStart,
+  onDragEnd,
+}: TimeDialProps) {
+  const minYear = 1990;
+  const maxYear = 2050;
+  const progress = ((isDragging ? targetYear : currentYear) - minYear) / (maxYear - minYear);
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 80,
+        backgroundColor: "rgba(15, 15, 15, 0.85)",
+        backdropFilter: "blur(20px)",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+        zIndex: 25,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "0 60px",
+      }}
+    >
+      {/* Year display */}
+      <div
+        style={{
+          position: "absolute",
+          top: 8,
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <span style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          Climate Time Machine
+        </span>
+        <span
+          style={{
+            fontSize: 18,
+            fontWeight: 700,
+            fontFamily: "monospace",
+            color: isDragging ? "#4ade80" : "#ffffff",
+            transition: "color 0.2s",
+          }}
+        >
+          {isDragging ? targetYear : currentYear}
+        </span>
+      </div>
+
+      {/* Slider container */}
+      <div style={{ position: "relative", marginTop: 8 }}>
+        {/* Background track */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            right: 0,
+            height: 4,
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 2,
+            transform: "translateY(-50%)",
+          }}
+        />
+
+        {/* Active track with gradient */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            width: `${progress * 100}%`,
+            height: 4,
+            background: "linear-gradient(90deg, #4ade80 0%, #fbbf24 50%, #ef4444 100%)",
+            borderRadius: 2,
+            transform: "translateY(-50%)",
+            boxShadow: `0 0 10px rgba(74, 222, 128, ${0.3 + progress * 0.3})`,
+            transition: isDragging ? "none" : "width 0.3s ease-out",
+          }}
+        />
+
+        {/* Milestone markers */}
+        {TIME_DIAL_MILESTONES.map((milestone) => {
+          const pos = ((milestone.year - minYear) / (maxYear - minYear)) * 100;
+          const isActive = (isDragging ? targetYear : currentYear) >= milestone.year;
+          const isCurrent = milestone.year === 2024;
+
+          return (
+            <div
+              key={milestone.year}
+              style={{
+                position: "absolute",
+                left: `${pos}%`,
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: isCurrent ? 10 : 6,
+                  height: isCurrent ? 10 : 6,
+                  borderRadius: "50%",
+                  backgroundColor: isActive ? (isCurrent ? "#4ade80" : "#ffffff") : "rgba(255,255,255,0.3)",
+                  border: isCurrent ? "2px solid #4ade80" : "none",
+                  transition: "background-color 0.2s",
+                }}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  top: 16,
+                  fontSize: 10,
+                  fontWeight: isCurrent ? 600 : 400,
+                  color: isActive ? "#ffffff" : "rgba(255,255,255,0.4)",
+                  whiteSpace: "nowrap",
+                  transition: "color 0.2s",
+                }}
+              >
+                {milestone.label}
+              </span>
+            </div>
+          );
+        })}
+
+        {/* Range input (invisible, for interaction) */}
+        <input
+          type="range"
+          min={minYear}
+          max={maxYear}
+          value={isDragging ? targetYear : currentYear}
+          onMouseDown={onDragStart}
+          onTouchStart={onDragStart}
+          onInput={(e) => onInput(parseInt(e.currentTarget.value, 10))}
+          onChange={(e) => {
+            onChange(parseInt(e.currentTarget.value, 10));
+            onDragEnd();
+          }}
+          onMouseUp={() => {
+            onChange(targetYear);
+            onDragEnd();
+          }}
+          onTouchEnd={() => {
+            onChange(targetYear);
+            onDragEnd();
+          }}
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            width: "100%",
+            height: 30,
+            transform: "translateY(-50%)",
+            opacity: 0,
+            cursor: "pointer",
+            zIndex: 10,
+          }}
+        />
+
+        {/* Custom handle */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: `${progress * 100}%`,
+            width: 20,
+            height: 20,
+            borderRadius: "50%",
+            backgroundColor: "#ffffff",
+            border: "3px solid #4ade80",
+            transform: "translate(-50%, -50%)",
+            boxShadow: isDragging
+              ? "0 0 20px rgba(74, 222, 128, 0.8), 0 0 40px rgba(74, 222, 128, 0.4)"
+              : "0 0 10px rgba(74, 222, 128, 0.5)",
+            transition: isDragging ? "none" : "left 0.3s ease-out, box-shadow 0.2s",
+            pointerEvents: "none",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function GlobeView() {
   const [hotspots, setHotspots] = useState<HotspotListItem[]>([]);
   const [selectedHotspot, setSelectedHotspot] =
@@ -145,6 +458,12 @@ export default function GlobeView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Climate Time Machine state
+  const [currentYear, setCurrentYear] = useState(2024);
+  const [targetYear, setTargetYear] = useState(2024);
+  const [isDraggingDial, setIsDraggingDial] = useState(false);
+  
   const hasTrackedGlobeLoad = useRef(false);
   const lastRequestedId = useRef<string | null>(null);
   const globeRef = useRef<GlobeRef>(undefined);
@@ -297,19 +616,32 @@ export default function GlobeView() {
           width={dimensions.width}
           height={dimensions.height}
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-          // Soft glowing center points (larger for easier clicking)
+          // Soft glowing center points - size and color based on current year
           pointsData={hotspots}
           pointLat="lat"
           pointLng="lng"
-          pointColor={(d) => typeToColor((d as HotspotListItem).type)}
+          pointColor={(d) => {
+            const item = d as HotspotListItem;
+            return getHotspotColorForYear(currentYear, item.type, item.severity, 0.3);
+          }}
           pointAltitude={0.01}
-          pointRadius={1.5}
-          // Radiating rings for visual fade effect
+          pointRadius={(d) => {
+            const item = d as HotspotListItem;
+            return getHotspotSizeForYear(currentYear, item.type, item.severity, 1.5);
+          }}
+          pointsTransitionDuration={800}
+          // Radiating rings - color based on current year
           ringsData={hotspots}
           ringLat="lat"
           ringLng="lng"
-          ringColor={(d: object) => typeToRingColor((d as HotspotListItem).type)}
-          ringMaxRadius={4}
+          ringColor={(d: object) => {
+            const item = d as HotspotListItem;
+            return getRingColorForYear(currentYear, item.type, item.severity);
+          }}
+          ringMaxRadius={(d: object) => {
+            const item = d as HotspotListItem;
+            return getHotspotSizeForYear(currentYear, item.type, item.severity, 4);
+          }}
           ringPropagationSpeed={0.8}
           ringRepeatPeriod={2500}
           ringAltitude={0.005}
@@ -1801,6 +2133,17 @@ export default function GlobeView() {
           </div>
         </aside>
       </div>
+
+      {/* Climate Time Machine Dial */}
+      <TimeDial
+        currentYear={currentYear}
+        targetYear={targetYear}
+        isDragging={isDraggingDial}
+        onInput={(year) => setTargetYear(year)}
+        onChange={(year) => setCurrentYear(year)}
+        onDragStart={() => setIsDraggingDial(true)}
+        onDragEnd={() => setIsDraggingDial(false)}
+      />
     </div>
   );
 }
