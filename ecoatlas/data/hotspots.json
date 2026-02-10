@@ -1,18 +1,18 @@
 [
   {
     "id": "hs-001",
-    "name": "Amazon Basin",
-    "lat": -3.4653,
-    "lng": -62.2159,
-    "severity": 4,
+    "name": "Amazon Basin (Mato Grosso)",
+    "lat": -12.64,
+    "lng": -55.42,
+    "severity": 5,
     "topic": "Deforestation",
     "type": "driver"
   },
   {
     "id": "hs-002",
     "name": "Great Barrier Reef",
-    "lat": -18.2871,
-    "lng": 147.6992,
+    "lat": -18.29,
+    "lng": 147.70,
     "severity": 5,
     "topic": "Coral Bleaching",
     "type": "impact"
@@ -28,29 +28,74 @@
   },
   {
     "id": "hs-004",
-    "name": "Sahara Fringe",
-    "lat": 15.4542,
-    "lng": 18.7322,
-    "severity": 2,
-    "topic": "Desertification",
+    "name": "Lake Chad",
+    "lat": 13.00,
+    "lng": 14.50,
+    "severity": 5,
+    "topic": "Water Scarcity",
     "type": "impact"
   },
   {
     "id": "hs-005",
-    "name": "Arctic Sea Ice",
-    "lat": 78.0,
-    "lng": 15.0,
+    "name": "Svalbard, Norway",
+    "lat": 78.22,
+    "lng": 15.63,
     "severity": 5,
-    "topic": "Sea Ice Loss",
+    "topic": "Arctic Warming",
     "type": "impact"
   },
   {
+    "id": "hs-006",
+    "name": "Ghawar Oil Field, Saudi Arabia",
+    "lat": 25.43,
+    "lng": 49.37,
+    "severity": 5,
+    "topic": "Oil Extraction",
+    "type": "driver"
+  },
+  {
     "id": "hs-007",
-    "name": "Southeast Asian Peatlands",
-    "lat": -2.0,
-    "lng": 113.0,
+    "name": "Kalimantan, Indonesia",
+    "lat": -1.25,
+    "lng": 114.50,
     "severity": 4,
-    "topic": "Peatland Emissions",
+    "topic": "Peatland Fires",
+    "type": "driver"
+  },
+  {
+    "id": "hs-008",
+    "name": "Shanxi Coal Mines, China",
+    "lat": 37.87,
+    "lng": 112.56,
+    "severity": 5,
+    "topic": "Coal Mining",
+    "type": "driver"
+  },
+  {
+    "id": "hs-009",
+    "name": "Permian Basin, USA",
+    "lat": 31.91,
+    "lng": -102.26,
+    "severity": 5,
+    "topic": "Methane Leakage",
+    "type": "driver"
+  },
+  {
+    "id": "hs-010",
+    "name": "Turkmenistan Gas Fields",
+    "lat": 39.50,
+    "lng": 54.00,
+    "severity": 4,
+    "topic": "Methane Leakage",
+    "type": "driver"
+  },
+  {
+    "id": "hs-011",
+    "name": "Sudd Wetlands, South Sudan",
+    "lat": 7.00,
+    "lng": 30.50,
+    "severity": 4,
+    "topic": "Natural Methane",
     "type": "driver"
   },
   {
@@ -61,6 +106,41 @@
     "severity": 4,
     "topic": "Methane Leakage",
     "type": "driver"
+  },
+  {
+    "id": "hs-013",
+    "name": "St. Vincent & Grenadines",
+    "lat": 13.19,
+    "lng": -61.20,
+    "severity": 5,
+    "topic": "Storm Intensity",
+    "type": "impact"
+  },
+  {
+    "id": "hs-014",
+    "name": "Manila, Philippines",
+    "lat": 14.59,
+    "lng": 120.98,
+    "severity": 5,
+    "topic": "Multi-Typhoon",
+    "type": "impact"
+  },
+  {
+    "id": "hs-015",
+    "name": "The Pantanal, Brazil",
+    "lat": -18.00,
+    "lng": -56.50,
+    "severity": 4,
+    "topic": "Ecosystem Loss",
+    "type": "impact"
+  },
+  {
+    "id": "hs-016",
+    "name": "Dhaka, Bangladesh",
+    "lat": 23.81,
+    "lng": 90.41,
+    "severity": 5,
+    "topic": "Flooding & Sea Level Rise",
+    "type": "impact"
   }
 ]
-

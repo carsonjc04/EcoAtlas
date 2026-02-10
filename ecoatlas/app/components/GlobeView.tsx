@@ -164,11 +164,11 @@ function getHotspotSizeForYear(
 
   if (type === "driver") {
     // Drivers grow over time (worsen)
-    return baseSize * (0.6 + progress * severity * 0.15);
+    return baseSize * (0.8 + progress * severity * 0.2);
   } else {
     // Impacts: high severity worsens, low severity improves
     const trend = severity >= 3 ? 0.8 : -0.3;
-    return baseSize * (0.8 + progress * trend * 0.3);
+    return baseSize * (0.9 + progress * trend * 0.3);
   }
 }
 
@@ -177,7 +177,7 @@ function getHotspotColorForYear(
   year: number,
   type: "driver" | "impact",
   severity: number,
-  opacity: number = 0.25
+  opacity: number = 0.55
 ): string {
   const progress = (year - 1990) / (2050 - 1990);
 
@@ -207,7 +207,7 @@ function getRingColorForYear(
   const progress = (year - 1990) / (2050 - 1990);
 
   return (t: number) => {
-    const fadeOpacity = 0.6 * (1 - t);
+    const fadeOpacity = 0.8 * (1 - t);
 
     if (type === "driver") {
       const color = interpolateColor("#FFD580", "#8B0000", progress);
@@ -622,12 +622,12 @@ export default function GlobeView() {
           pointLng="lng"
           pointColor={(d) => {
             const item = d as HotspotListItem;
-            return getHotspotColorForYear(currentYear, item.type, item.severity, 0.3);
+            return getHotspotColorForYear(currentYear, item.type, item.severity, 0.6);
           }}
-          pointAltitude={0.01}
+          pointAltitude={0.015}
           pointRadius={(d) => {
             const item = d as HotspotListItem;
-            return getHotspotSizeForYear(currentYear, item.type, item.severity, 1.5);
+            return getHotspotSizeForYear(currentYear, item.type, item.severity, 2.5);
           }}
           pointsTransitionDuration={800}
           // Radiating rings - color based on current year
@@ -640,11 +640,81 @@ export default function GlobeView() {
           }}
           ringMaxRadius={(d: object) => {
             const item = d as HotspotListItem;
-            return getHotspotSizeForYear(currentYear, item.type, item.severity, 4);
+            return getHotspotSizeForYear(currentYear, item.type, item.severity, 5.5);
           }}
-          ringPropagationSpeed={0.8}
-          ringRepeatPeriod={2500}
+          ringPropagationSpeed={1}
+          ringRepeatPeriod={2000}
           ringAltitude={0.005}
+          // Persistent HTML labels above hotspots
+          htmlElementsData={hotspots}
+          htmlLat="lat"
+          htmlLng="lng"
+          htmlAltitude={0.04}
+          htmlElement={(d) => {
+            const item = d as HotspotListItem;
+            const accentColor = item.type === "driver" ? "#ff6b6b" : "#69b3ff";
+
+            const container = document.createElement("div");
+            container.style.cssText = `
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              pointer-events: none;
+              transform: translateY(-100%);
+              user-select: none;
+            `;
+
+            const label = document.createElement("div");
+            label.style.cssText = `
+              background: rgba(10, 10, 10, 0.85);
+              backdrop-filter: blur(8px);
+              border: 1px solid ${accentColor}44;
+              border-radius: 4px;
+              padding: 3px 6px;
+              white-space: nowrap;
+              font-family: Inter, system-ui, sans-serif;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 1px;
+            `;
+
+            const nameEl = document.createElement("span");
+            nameEl.textContent = item.name;
+            nameEl.style.cssText = `
+              font-size: 7px;
+              font-weight: 600;
+              color: #ffffff;
+              letter-spacing: 0.02em;
+              line-height: 1.2;
+            `;
+
+            const topicEl = document.createElement("span");
+            topicEl.textContent = item.topic;
+            topicEl.style.cssText = `
+              font-size: 6px;
+              font-weight: 500;
+              color: ${accentColor};
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              line-height: 1.2;
+            `;
+
+            const stem = document.createElement("div");
+            stem.style.cssText = `
+              width: 1px;
+              height: 6px;
+              background: ${accentColor}66;
+            `;
+
+            label.appendChild(nameEl);
+            label.appendChild(topicEl);
+            container.appendChild(label);
+            container.appendChild(stem);
+
+            return container;
+          }}
+          htmlTransitionDuration={600}
           pointLabel={(d) => {
             const item = d as HotspotListItem;
             const typeLabel = item.type === "driver" ? "Driver" : "Impact";
@@ -1617,6 +1687,7 @@ export default function GlobeView() {
             selectedHotspot.type === "driver" ? "Driver" : "Impact"
           } • ${selectedHotspot.topic}`}
           badgeLabel={severityLabel(selectedHotspot.severity)}
+          badgeType={selectedHotspot.type}
           activeTab={activeTab}
           onTabChange={(tab) => setActiveTab(tab)}
           onClose={() => setIsPanelOpen(false)}

@@ -4,7 +4,7 @@ export type SourceRef = {
   url: string;
   publisher?: string;
   cadence?: "daily" | "weekly" | "monthly" | "annual" | "static";
-  format?: "json" | "csv" | "txt" | "pdf";
+  format?: "json" | "csv" | "txt" | "pdf" | "api";
   notes?: string;
 };
 
@@ -21,8 +21,10 @@ export type HotspotSourceMapping = {
   hotspotId: string;
   hotspotName: string;
   hotspotType: "driver" | "impact";
-  driverCategory?: "fossil" | "land-use" | "biogenic" | "infrastructure";
+  driverCategory?: "fossil-oil" | "fossil-coal" | "fossil-gas" | "land-use" | "natural";
+  impactCategory?: "temperature" | "storms" | "flooding" | "ecosystem" | "water";
   primaryGas?: "CO2" | "CH4" | "N2O" | "CO2e";
+  superEmitter?: boolean;
   metrics: MetricMapping[];
 };
 
@@ -33,6 +35,9 @@ export type SourceMap = {
 
 export const sourceMap: SourceMap = {
   sources: [
+    // ============================================
+    // Atmospheric & General Climate Data
+    // ============================================
     {
       id: "noaa_mlo_co2_monthly",
       name: "NOAA GML Mauna Loa CO2 (Monthly Mean)",
@@ -43,169 +48,283 @@ export const sourceMap: SourceMap = {
       notes: "Mauna Loa record includes a pause in late 2022 and resumes in 2023.",
     },
     {
-      id: "placeholder_ipcc_ar6",
-      name: "IPCC AR6 (placeholder)",
-      url: "https://www.ipcc.ch/report/ar6/",
-      publisher: "IPCC",
-      cadence: "static",
+      id: "noaa_arctic_report",
+      name: "NOAA Arctic Report Card",
+      url: "https://arctic.noaa.gov/Report-Card",
+      publisher: "NOAA",
+      cadence: "annual",
       format: "pdf",
-      notes: "Placeholder until a metric-specific dataset is selected.",
+      notes: "Annual assessment of Arctic environmental conditions.",
     },
     {
-      id: "placeholder_owid",
-      name: "Our World in Data (placeholder)",
-      url: "https://ourworldindata.org/",
-      publisher: "Our World in Data",
+      id: "copernicus_era5",
+      name: "Copernicus ERA5 Reanalysis",
+      url: "https://cds.climate.copernicus.eu/",
+      publisher: "ECMWF/Copernicus",
+      cadence: "monthly",
+      format: "api",
+      notes: "Global climate reanalysis data from 1940 to present.",
+    },
+
+    // ============================================
+    // Emissions Databases
+    // ============================================
+    {
+      id: "climate_trace",
+      name: "Climate TRACE",
+      url: "https://climatetrace.org/",
+      publisher: "Climate TRACE Coalition",
+      cadence: "annual",
+      format: "api",
+      notes: "Facility-level emissions data using satellite and AI analysis.",
+    },
+    {
+      id: "edgar_jrc",
+      name: "EDGAR v8.0 (JRC)",
+      url: "https://edgar.jrc.ec.europa.eu/",
+      publisher: "European Commission JRC",
       cadence: "annual",
       format: "csv",
-      notes: "Placeholder until a metric-specific dataset is selected.",
-    },
-    {
-      id: "imo_shipping_emissions",
-      name: "International Maritime Organization (IMO)",
-      url: "https://www.imo.org/en/OurWork/Environment/Pages/Greenhouse-Gas-Studies-2014.aspx",
-      publisher: "IMO",
-      cadence: "static",
-      format: "pdf",
-      notes: "Snapshot value used until a time series is integrated.",
-    },
-    {
-      id: "icao_aviation_emissions",
-      name: "International Civil Aviation Organization (ICAO)",
-      url: "https://www.icao.int/environmental-protection/Pages/ClimateChange.aspx",
-      publisher: "ICAO",
-      cadence: "annual",
-      format: "pdf",
-      notes: "Snapshot value used until a time series is integrated.",
-    },
-    {
-      id: "src-wri-01",
-      name: "World Resources Institute (WRI)",
-      url: "https://www.wri.org/",
-      publisher: "World Resources Institute",
-      cadence: "annual",
-      format: "pdf",
-      notes:
-        "Focus on Southeast Asian peatland oxidation and fire emissions.",
+      notes: "Global gridded emissions inventory 1970-2022.",
     },
     {
       id: "src-iea-methane",
       name: "IEA Methane Tracker 2025",
       url: "https://www.iea.org/reports/methane-tracker",
-      publisher: "IEA Methane Tracker 2025",
+      publisher: "International Energy Agency",
       cadence: "annual",
       format: "csv",
-      notes:
-        "Standard for satellite-verified methane leakage data.",
+      notes: "Standard for satellite-verified methane leakage data.",
     },
+    {
+      id: "epa_ghgrp",
+      name: "EPA Greenhouse Gas Reporting Program",
+      url: "https://www.epa.gov/ghgreporting",
+      publisher: "US EPA",
+      cadence: "annual",
+      format: "csv",
+      notes: "Facility-level US emissions reporting (required by law).",
+    },
+
+    // ============================================
+    // Energy & Fossil Fuel Sources
+    // ============================================
+    {
+      id: "global_energy_monitor",
+      name: "Global Energy Monitor",
+      url: "https://globalenergymonitor.org/",
+      publisher: "Global Energy Monitor",
+      cadence: "monthly",
+      format: "csv",
+      notes: "Tracks coal mines, oil/gas fields, and power plants globally.",
+    },
+    {
+      id: "sentinel_5p",
+      name: "Sentinel-5P TROPOMI",
+      url: "https://sentinel.esa.int/web/sentinel/missions/sentinel-5p",
+      publisher: "ESA/Copernicus",
+      cadence: "daily",
+      format: "api",
+      notes: "Satellite methane and NO2 plume detection for super-emitters.",
+    },
+
+    // ============================================
+    // Land Use & Deforestation
+    // ============================================
     {
       id: "src-gfw-01",
-      name: "Global Forest Watch (Primary Forest Loss)",
+      name: "Global Forest Watch",
       url: "https://www.globalforestwatch.org/",
-      publisher: "Global Forest Watch",
+      publisher: "World Resources Institute",
+      cadence: "weekly",
+      format: "api",
+      notes: "Near-real-time deforestation alerts and annual tree cover loss.",
+    },
+    {
+      id: "inpe_prodes",
+      name: "INPE PRODES/DETER",
+      url: "http://terrabrasilis.dpi.inpe.br/",
+      publisher: "INPE (Brazil)",
+      cadence: "monthly",
+      format: "api",
+      notes: "Official Amazon deforestation monitoring system.",
+    },
+    {
+      id: "nasa_firms",
+      name: "NASA FIRMS (Fire Information)",
+      url: "https://firms.modaps.eosdis.nasa.gov/",
+      publisher: "NASA",
+      cadence: "daily",
+      format: "api",
+      notes: "Active fire detection from MODIS and VIIRS satellites.",
+    },
+
+    // ============================================
+    // Disaster & Impact Databases
+    // ============================================
+    {
+      id: "emdat_cred",
+      name: "EM-DAT International Disaster Database",
+      url: "https://www.emdat.be/",
+      publisher: "CRED (Université catholique de Louvain)",
+      cadence: "monthly",
+      format: "csv",
+      notes: "Comprehensive disaster database since 1900.",
+    },
+    {
+      id: "germanwatch_cri",
+      name: "Global Climate Risk Index",
+      url: "https://www.germanwatch.org/en/cri",
+      publisher: "Germanwatch",
+      cadence: "annual",
+      format: "pdf",
+      notes: "Annual ranking of countries by climate-related losses.",
+    },
+    {
+      id: "pagasa_typhoon",
+      name: "PAGASA Tropical Cyclone Data",
+      url: "https://www.pagasa.dph.gov.ph/",
+      publisher: "PAGASA (Philippines)",
       cadence: "annual",
       format: "csv",
-      notes: "Primary forest loss time series, used for Amazon Basin.",
+      notes: "Philippine typhoon tracks and intensity records.",
+    },
+
+    // ============================================
+    // Ocean & Coral Data
+    // ============================================
+    {
+      id: "aims_reef_monitoring",
+      name: "AIMS Long-Term Reef Monitoring",
+      url: "https://www.aims.gov.au/",
+      publisher: "Australian Institute of Marine Science",
+      cadence: "annual",
+      format: "csv",
+      notes: "Great Barrier Reef coral cover and bleaching surveys since 1985.",
+    },
+    {
+      id: "noaa_coral_reef_watch",
+      name: "NOAA Coral Reef Watch",
+      url: "https://coralreefwatch.noaa.gov/",
+      publisher: "NOAA",
+      cadence: "daily",
+      format: "api",
+      notes: "Sea surface temperature and bleaching alerts.",
+    },
+
+    // ============================================
+    // Water & Hydrology
+    // ============================================
+    {
+      id: "nasa_grace",
+      name: "NASA GRACE-FO",
+      url: "https://grace.jpl.nasa.gov/",
+      publisher: "NASA/DLR",
+      cadence: "monthly",
+      format: "api",
+      notes: "Tracks groundwater and surface water changes via gravity measurements.",
+    },
+    {
+      id: "fao_aquastat",
+      name: "FAO AQUASTAT",
+      url: "https://www.fao.org/aquastat/",
+      publisher: "FAO",
+      cadence: "annual",
+      format: "csv",
+      notes: "Global water resources and usage statistics.",
     },
   ],
+
   hotspots: [
+    // ============================================
+    // DRIVERS - Fossil Fuels
+    // ============================================
     {
-      hotspotId: "hs-000",
-      hotspotName: "Global Atmosphere (Mauna Loa CO2)",
+      hotspotId: "hs-006",
+      hotspotName: "Ghawar Oil Field, Saudi Arabia",
       hotspotType: "driver",
-      driverCategory: "infrastructure",
+      driverCategory: "fossil-oil",
       primaryGas: "CO2",
+      superEmitter: true,
       metrics: [
         {
-          metricKey: "co2_ppm_monthly",
-          unit: "ppm",
-          description: "Atmospheric CO2 monthly mean from Mauna Loa.",
-          sources: ["noaa_mlo_co2_monthly"],
-          status: "implemented",
-          dataPath: "data/series/co2_mlo_monthly.json",
-        },
-      ],
-    },
-    {
-      hotspotId: "hs-001",
-      hotspotName: "Amazon Deforestation Arc",
-      hotspotType: "driver",
-      driverCategory: "land-use",
-      primaryGas: "CO2e",
-      metrics: [
-        {
-          metricKey: "deforestation_rate_km2_per_year",
-          unit: "km²/year",
-          description: "Annual deforestation rate in the region.",
-          sources: ["placeholder_ipcc_ar6"],
+          metricKey: "oil_extraction_emissions_mtco2",
+          unit: "MtCO2/yr",
+          description: "CO2 emissions from oil extraction and flaring.",
+          sources: ["climate_trace", "edgar_jrc"],
           status: "planned",
         },
         {
-          metricKey: "land_use_emissions_mtco2e",
-          unit: "MtCO2e",
-          description: "Land-use change emissions attributable to deforestation.",
-          sources: ["placeholder_ipcc_ar6"],
+          metricKey: "oil_production_barrels",
+          unit: "Million barrels/day",
+          description: "Daily oil production volume.",
+          sources: ["global_energy_monitor"],
           status: "planned",
-        },
-        {
-          metricKey: "amazon_primary_forest_loss_mha",
-          unit: "Million Hectares",
-          description: "Primary forest loss in the Amazon Basin.",
-          sources: ["src-gfw-01"],
-          status: "implemented",
-          dataPath: "src/data/metricsAmazonForestLoss.ts",
         },
       ],
     },
     {
       hotspotId: "hs-008",
-      hotspotName: "Shipping Lanes",
+      hotspotName: "Shanxi Coal Mines, China",
       hotspotType: "driver",
-      driverCategory: "infrastructure",
+      driverCategory: "fossil-coal",
       primaryGas: "CO2",
+      superEmitter: true,
       metrics: [
         {
-          metricKey: "shipping_co2_share_pct",
-          unit: "% of global CO2",
-          description: "Share of global CO2 emissions attributable to shipping.",
-          sources: ["imo_shipping_emissions"],
-          status: "implemented",
-          dataPath: "data/metricsSnapshots.ts",
+          metricKey: "coal_mining_emissions_mtco2",
+          unit: "MtCO2/yr",
+          description: "CO2 emissions from coal extraction and combustion.",
+          sources: ["climate_trace", "global_energy_monitor", "edgar_jrc"],
+          status: "planned",
+        },
+        {
+          metricKey: "methane_venting_mt",
+          unit: "Mt CH4/yr",
+          description: "Methane released from coal seams.",
+          sources: ["sentinel_5p", "src-iea-methane"],
+          status: "planned",
         },
       ],
     },
     {
       hotspotId: "hs-009",
-      hotspotName: "Aviation Corridors",
+      hotspotName: "Permian Basin, USA",
       hotspotType: "driver",
-      driverCategory: "infrastructure",
-      primaryGas: "CO2",
+      driverCategory: "fossil-gas",
+      primaryGas: "CH4",
+      superEmitter: true,
       metrics: [
         {
-          metricKey: "aviation_co2_share_pct",
-          unit: "% of global CO2",
-          description:
-            "Share of global CO2 emissions from aviation (non-CO2 effects noted separately).",
-          sources: ["icao_aviation_emissions"],
-          status: "implemented",
-          dataPath: "data/metricsSnapshots.ts",
+          metricKey: "permian_methane_leakage_mt",
+          unit: "Mt CH4/yr",
+          description: "Methane leakage from oil and gas operations.",
+          sources: ["epa_ghgrp", "sentinel_5p", "src-iea-methane"],
+          status: "planned",
+        },
+        {
+          metricKey: "flaring_emissions_mtco2",
+          unit: "MtCO2/yr",
+          description: "CO2 from natural gas flaring.",
+          sources: ["climate_trace", "epa_ghgrp"],
+          status: "planned",
         },
       ],
     },
     {
-      hotspotId: "hs-007",
-      hotspotName: "Southeast Asian Peatlands",
+      hotspotId: "hs-010",
+      hotspotName: "Turkmenistan Gas Fields",
       hotspotType: "driver",
-      driverCategory: "land-use",
-      primaryGas: "CO2e",
+      driverCategory: "fossil-gas",
+      primaryGas: "CH4",
+      superEmitter: true,
       metrics: [
         {
-          metricKey: "peatland_emissions_mtco2e",
-          unit: "MtCO2e/yr",
-          description: "Emissions from peatland oxidation and fires.",
-          sources: ["src-wri-01"],
-          status: "implemented",
-          dataPath: "data/metricsSnapshots.ts",
+          metricKey: "turkmenistan_methane_leakage_mt",
+          unit: "Mt CH4/yr",
+          description: "Methane leakage from gas infrastructure.",
+          sources: ["src-iea-methane", "sentinel_5p"],
+          status: "planned",
         },
       ],
     },
@@ -213,7 +332,7 @@ export const sourceMap: SourceMap = {
       hotspotId: "hs-012",
       hotspotName: "West Siberian Gas",
       hotspotType: "driver",
-      driverCategory: "fossil",
+      driverCategory: "fossil-gas",
       primaryGas: "CH4",
       metrics: [
         {
@@ -226,6 +345,335 @@ export const sourceMap: SourceMap = {
         },
       ],
     },
+
+    // ============================================
+    // DRIVERS - Land Use
+    // ============================================
+    {
+      hotspotId: "hs-001",
+      hotspotName: "Amazon Basin (Mato Grosso)",
+      hotspotType: "driver",
+      driverCategory: "land-use",
+      primaryGas: "CO2e",
+      metrics: [
+        {
+          metricKey: "amazon_deforestation_km2",
+          unit: "km²/year",
+          description: "Annual deforestation rate in Mato Grosso region.",
+          sources: ["src-gfw-01", "inpe_prodes"],
+          status: "planned",
+        },
+        {
+          metricKey: "amazon_primary_forest_loss_mha",
+          unit: "Million Hectares",
+          description: "Primary forest loss in the Amazon Basin.",
+          sources: ["src-gfw-01"],
+          status: "implemented",
+          dataPath: "src/data/metricsAmazonForestLoss.ts",
+        },
+        {
+          metricKey: "land_use_emissions_mtco2e",
+          unit: "MtCO2e",
+          description: "Land-use change emissions from deforestation.",
+          sources: ["climate_trace", "edgar_jrc"],
+          status: "planned",
+        },
+      ],
+    },
+    {
+      hotspotId: "hs-007",
+      hotspotName: "Kalimantan, Indonesia",
+      hotspotType: "driver",
+      driverCategory: "land-use",
+      primaryGas: "CO2e",
+      metrics: [
+        {
+          metricKey: "peatland_fire_emissions_mtco2e",
+          unit: "MtCO2e/yr",
+          description: "Emissions from peatland fires.",
+          sources: ["nasa_firms", "src-gfw-01"],
+          status: "planned",
+        },
+        {
+          metricKey: "fire_count_annual",
+          unit: "fire detections/year",
+          description: "Number of active fire detections.",
+          sources: ["nasa_firms"],
+          status: "planned",
+        },
+        {
+          metricKey: "peatland_area_burned_ha",
+          unit: "hectares",
+          description: "Peatland area affected by fires.",
+          sources: ["src-gfw-01"],
+          status: "planned",
+        },
+      ],
+    },
+
+    // ============================================
+    // DRIVERS - Natural
+    // ============================================
+    {
+      hotspotId: "hs-011",
+      hotspotName: "Sudd Wetlands, South Sudan",
+      hotspotType: "driver",
+      driverCategory: "natural",
+      primaryGas: "CH4",
+      metrics: [
+        {
+          metricKey: "wetland_methane_emissions_mt",
+          unit: "Mt CH4/yr",
+          description: "Natural methane emissions from wetland decomposition.",
+          sources: ["edgar_jrc"],
+          status: "planned",
+        },
+      ],
+    },
+
+    // ============================================
+    // IMPACTS - Temperature
+    // ============================================
+    {
+      hotspotId: "hs-005",
+      hotspotName: "Svalbard, Norway",
+      hotspotType: "impact",
+      impactCategory: "temperature",
+      metrics: [
+        {
+          metricKey: "arctic_temperature_anomaly_c",
+          unit: "°C",
+          description: "Temperature anomaly vs 1951-1980 baseline.",
+          sources: ["noaa_arctic_report", "copernicus_era5"],
+          status: "planned",
+        },
+        {
+          metricKey: "sea_ice_extent_km2",
+          unit: "million km²",
+          description: "September minimum sea ice extent.",
+          sources: ["noaa_arctic_report"],
+          status: "planned",
+        },
+        {
+          metricKey: "permafrost_thaw_depth_cm",
+          unit: "cm",
+          description: "Active layer thickness increase.",
+          sources: ["noaa_arctic_report"],
+          status: "planned",
+        },
+      ],
+    },
+
+    // ============================================
+    // IMPACTS - Storms
+    // ============================================
+    {
+      hotspotId: "hs-013",
+      hotspotName: "St. Vincent & Grenadines",
+      hotspotType: "impact",
+      impactCategory: "storms",
+      metrics: [
+        {
+          metricKey: "hurricane_frequency",
+          unit: "events/year",
+          description: "Number of hurricane-force storms affecting the region.",
+          sources: ["emdat_cred", "germanwatch_cri"],
+          status: "planned",
+        },
+        {
+          metricKey: "storm_damage_usd",
+          unit: "USD millions",
+          description: "Economic losses from storm damage.",
+          sources: ["emdat_cred"],
+          status: "planned",
+        },
+      ],
+    },
+    {
+      hotspotId: "hs-014",
+      hotspotName: "Manila, Philippines",
+      hotspotType: "impact",
+      impactCategory: "storms",
+      metrics: [
+        {
+          metricKey: "typhoon_count_annual",
+          unit: "typhoons/year",
+          description: "Number of typhoons making landfall.",
+          sources: ["pagasa_typhoon", "emdat_cred"],
+          status: "planned",
+        },
+        {
+          metricKey: "typhoon_fatalities",
+          unit: "deaths/year",
+          description: "Fatalities attributed to typhoons.",
+          sources: ["emdat_cred", "germanwatch_cri"],
+          status: "planned",
+        },
+        {
+          metricKey: "climate_risk_index_rank",
+          unit: "rank",
+          description: "Position in Global Climate Risk Index.",
+          sources: ["germanwatch_cri"],
+          status: "planned",
+        },
+      ],
+    },
+
+    // ============================================
+    // IMPACTS - Flooding
+    // ============================================
+    {
+      hotspotId: "hs-016",
+      hotspotName: "Dhaka, Bangladesh",
+      hotspotType: "impact",
+      impactCategory: "flooding",
+      metrics: [
+        {
+          metricKey: "flood_affected_population",
+          unit: "millions",
+          description: "Population affected by annual flooding.",
+          sources: ["emdat_cred"],
+          status: "planned",
+        },
+        {
+          metricKey: "sea_level_rise_mm",
+          unit: "mm/year",
+          description: "Local sea level rise rate.",
+          sources: ["copernicus_era5"],
+          status: "planned",
+        },
+        {
+          metricKey: "monsoon_rainfall_anomaly_pct",
+          unit: "%",
+          description: "Monsoon rainfall deviation from average.",
+          sources: ["copernicus_era5"],
+          status: "planned",
+        },
+      ],
+    },
+
+    // ============================================
+    // IMPACTS - Ecosystem
+    // ============================================
+    {
+      hotspotId: "hs-002",
+      hotspotName: "Great Barrier Reef",
+      hotspotType: "impact",
+      impactCategory: "ecosystem",
+      metrics: [
+        {
+          metricKey: "coral_cover_pct",
+          unit: "%",
+          description: "Live coral cover percentage.",
+          sources: ["aims_reef_monitoring"],
+          status: "planned",
+        },
+        {
+          metricKey: "bleaching_severity",
+          unit: "DHW",
+          description: "Degree Heating Weeks - bleaching stress metric.",
+          sources: ["noaa_coral_reef_watch"],
+          status: "planned",
+        },
+        {
+          metricKey: "mass_bleaching_events",
+          unit: "events",
+          description: "Number of mass bleaching events recorded.",
+          sources: ["aims_reef_monitoring"],
+          status: "planned",
+        },
+      ],
+    },
+    {
+      hotspotId: "hs-015",
+      hotspotName: "The Pantanal, Brazil",
+      hotspotType: "impact",
+      impactCategory: "ecosystem",
+      metrics: [
+        {
+          metricKey: "wetland_area_burned_ha",
+          unit: "hectares",
+          description: "Area of wetland affected by fires.",
+          sources: ["nasa_firms", "inpe_prodes"],
+          status: "planned",
+        },
+        {
+          metricKey: "flood_pulse_anomaly",
+          unit: "days",
+          description: "Deviation in annual flood pulse duration.",
+          sources: ["nasa_grace"],
+          status: "planned",
+        },
+      ],
+    },
+    {
+      hotspotId: "hs-003",
+      hotspotName: "California Coast",
+      hotspotType: "impact",
+      impactCategory: "ecosystem",
+      metrics: [
+        {
+          metricKey: "wildfire_area_burned_ha",
+          unit: "hectares",
+          description: "Annual area burned by wildfires.",
+          sources: ["nasa_firms"],
+          status: "planned",
+        },
+        {
+          metricKey: "drought_severity_index",
+          unit: "index",
+          description: "Palmer Drought Severity Index.",
+          sources: ["noaa_mlo_co2_monthly"],
+          status: "planned",
+        },
+      ],
+    },
+
+    // ============================================
+    // IMPACTS - Water Scarcity
+    // ============================================
+    {
+      hotspotId: "hs-004",
+      hotspotName: "Lake Chad",
+      hotspotType: "impact",
+      impactCategory: "water",
+      metrics: [
+        {
+          metricKey: "lake_surface_area_km2",
+          unit: "km²",
+          description: "Lake surface area (90% reduction since 1960s).",
+          sources: ["nasa_grace", "fao_aquastat"],
+          status: "planned",
+        },
+        {
+          metricKey: "water_availability_m3_capita",
+          unit: "m³/person/year",
+          description: "Per capita water availability in the basin.",
+          sources: ["fao_aquastat"],
+          status: "planned",
+        },
+      ],
+    },
+
+    // ============================================
+    // GLOBAL REFERENCE
+    // ============================================
+    {
+      hotspotId: "hs-000",
+      hotspotName: "Global Atmosphere (Mauna Loa CO2)",
+      hotspotType: "driver",
+      driverCategory: "fossil-gas",
+      primaryGas: "CO2",
+      metrics: [
+        {
+          metricKey: "co2_ppm_monthly",
+          unit: "ppm",
+          description: "Atmospheric CO2 monthly mean from Mauna Loa.",
+          sources: ["noaa_mlo_co2_monthly"],
+          status: "implemented",
+          dataPath: "data/series/co2_mlo_monthly.json",
+        },
+      ],
+    },
   ],
 };
-

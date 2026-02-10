@@ -9,6 +9,7 @@ type SidebarProps = {
   title: string;
   subtitle: string;
   badgeLabel?: string;
+  badgeType?: "driver" | "impact";
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
   onClose?: () => void;
@@ -31,6 +32,7 @@ export default function Sidebar({
   title,
   subtitle,
   badgeLabel,
+  badgeType = "impact",
   activeTab,
   onTabChange,
   onClose,
@@ -40,6 +42,7 @@ export default function Sidebar({
   layers,
   sources,
 }: SidebarProps) {
+  const badgeColor = badgeType === "driver" ? "#ff6b6b" : "#69b3ff";
   return (
     <aside
       style={{
@@ -130,8 +133,8 @@ export default function Sidebar({
         </h2>
         <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
           {badgeLabel && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: "#60a5fa" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#60a5fa" }} />
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: badgeColor }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: badgeColor }} />
               {badgeLabel}
             </span>
           )}

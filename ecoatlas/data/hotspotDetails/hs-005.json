@@ -1,29 +1,34 @@
 {
   "id": "hs-005",
   "story": {
-    "headline": "Summer Sea Ice Minimums Keep Shrinking",
-    "summary": "Arctic summer sea ice extent has declined steadily, exposing darker ocean water for longer periods each year.",
-    "climateImpact": "Warming temperatures melt sea ice, and the darker ocean absorbs more heat, amplifying global warming.",
+    "headline": "Svalbard Is Warming Faster Than Almost Anywhere on Earth",
+    "summary": "The Arctic archipelago of Svalbard has experienced temperature increases of up to 5-7°C above the 1971-2000 average, making it one of the fastest-warming places on the planet.",
+    "climateImpact": "Rapid Arctic warming drives permafrost thaw, sea ice loss, and glacier retreat, releasing stored carbon and methane while disrupting global weather patterns.",
     "causeEffect": [
-      "Rising air and ocean temperatures melt ice",
-      "Loss of reflective ice reduces albedo",
-      "More solar energy is absorbed by the ocean",
-      "Regional warming accelerates further melt"
+      "Arctic amplification intensifies warming at 3-4x the global rate",
+      "Sea ice loss exposes darker ocean, absorbing more heat",
+      "Permafrost thaw releases methane and CO₂",
+      "Glacier retreat raises sea levels and alters ocean salinity",
+      "Disrupted polar vortex sends cold blasts to lower latitudes"
     ],
-    "scaleContext": "The Arctic is warming several times faster than the global average, affecting weather patterns worldwide.",
-    "outlook": "Continued warming risks nearly ice-free summers, disrupting ecosystems and coastal communities."
+    "scaleContext": "Svalbard's annual mean temperature rose 3-5°C between 1971 and 2020. Winter temperatures have increased by up to 7°C. The Arctic has lost 40% of its summer sea ice since 1979.",
+    "outlook": "Svalbard's warming trajectory could lead to ice-free Arctic summers by the 2040s, with irreversible consequences for global climate systems."
   },
-  "title": "Summer Sea Ice Minimums Keep Shrinking",
-  "summary": "Arctic summer sea ice extent has declined steadily, exposing darker ocean water for longer periods each year.",
+  "title": "Svalbard Is Warming Faster Than Almost Anywhere on Earth",
+  "summary": "Svalbard has experienced temperature increases of 5-7°C above historical averages, making it one of the fastest-warming places on the planet.",
   "sources": [
-    "https://example.org/arctic-ice-brief",
-    "https://example.org/sea-ice-trends"
+    "https://arctic.noaa.gov/Report-Card",
+    "https://www.met.no/en",
+    "https://nsidc.org/arcticseaicenews/"
   ],
   "series": [
-    { "year": 2019, "value": 4.1 },
-    { "year": 2020, "value": 3.8 },
-    { "year": 2021, "value": 4.2 },
-    { "year": 2022, "value": 3.9 }
+    { "year": 2015, "value": 3.2 },
+    { "year": 2016, "value": 3.8 },
+    { "year": 2017, "value": 3.5 },
+    { "year": 2018, "value": 4.1 },
+    { "year": 2019, "value": 4.3 },
+    { "year": 2020, "value": 4.9 },
+    { "year": 2021, "value": 4.6 },
+    { "year": 2022, "value": 5.2 }
   ]
 }
-

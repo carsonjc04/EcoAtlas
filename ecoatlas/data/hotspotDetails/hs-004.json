@@ -1,16 +1,34 @@
 {
   "id": "hs-004",
-  "title": "Grazing Pressure Drives Soil Degradation",
-  "summary": "Shrinking vegetation belts are linked to overgrazing and reduced rainfall, increasing dust and erosion.",
+  "story": {
+    "headline": "Lake Chad Has Shrunk by 90% Since the 1960s",
+    "summary": "Once one of Africa's largest lakes, Lake Chad has lost approximately 90% of its surface area due to climate change, overuse of water resources, and prolonged drought cycles in the Sahel region.",
+    "climateImpact": "Rising temperatures increase evaporation and reduce rainfall in the Lake Chad Basin, accelerating the lake's decline and triggering cascading humanitarian crises.",
+    "causeEffect": [
+      "Rising temperatures increase evaporation rates",
+      "Shifting rainfall patterns reduce inflows from tributaries",
+      "Agricultural irrigation diverts remaining water",
+      "Shrinking lake devastates fishing communities and agriculture",
+      "Water scarcity fuels regional conflict and displacement"
+    ],
+    "scaleContext": "Over 30 million people across four countries (Chad, Niger, Nigeria, Cameroon) depend on the Lake Chad Basin. The lake shrank from 25,000 km² in 1963 to under 2,500 km² today.",
+    "outlook": "Without coordinated water management and climate adaptation, Lake Chad could functionally disappear, displacing millions and destabilizing the entire Sahel region."
+  },
+  "title": "Lake Chad Has Shrunk by 90% Since the 1960s",
+  "summary": "Once one of Africa's largest lakes, Lake Chad has lost approximately 90% of its surface area due to climate change, overuse of water resources, and prolonged drought.",
   "sources": [
-    "https://example.org/sahel-update",
-    "https://example.org/land-use-study"
+    "https://www.fao.org/aquastat/en/",
+    "https://grace.jpl.nasa.gov/",
+    "https://www.unep.org/resources/report/livelihood-security-climate-change-migration-and-conflict-lake-chad"
   ],
   "series": [
-    { "year": 2019, "value": 18 },
-    { "year": 2020, "value": 22 },
-    { "year": 2021, "value": 25 },
-    { "year": 2022, "value": 29 }
+    { "year": 2015, "value": 2300 },
+    { "year": 2016, "value": 2150 },
+    { "year": 2017, "value": 2050 },
+    { "year": 2018, "value": 1900 },
+    { "year": 2019, "value": 1800 },
+    { "year": 2020, "value": 1750 },
+    { "year": 2021, "value": 1680 },
+    { "year": 2022, "value": 1600 }
   ]
 }
-

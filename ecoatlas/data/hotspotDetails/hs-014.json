@@ -1,0 +1,34 @@
+{
+  "id": "hs-014",
+  "story": {
+    "headline": "Manila: Ground Zero for the World's Deadliest Typhoons",
+    "summary": "The Philippines is the most typhoon-exposed nation on Earth, with Manila and surrounding regions bearing the brunt. In late 2025, six typhoons struck within 30 days — an unprecedented super-cluster — pushing the Philippines to the top of the Climate Risk Index.",
+    "climateImpact": "Warmer oceans intensify typhoons, while sea level rise amplifies flooding in low-lying Metro Manila. Climate change is increasing both the frequency of extreme typhoons and the speed of rapid intensification.",
+    "causeEffect": [
+      "The Philippines lies in the world's most active typhoon corridor",
+      "Warming seas increase typhoon wind speeds and rainfall",
+      "Rapid intensification gives less time for evacuation",
+      "Metro Manila's 14 million people are highly exposed to storm surge",
+      "Repeated destruction traps communities in poverty cycles"
+    ],
+    "scaleContext": "The Philippines averages 20 typhoons per year, with 8-9 making landfall. Typhoon Haiyan (2013) killed over 6,300 people. The 2025 super-cluster affected over 10 million people in 30 days.",
+    "outlook": "The Climate Risk Index ranks the Philippines as the most vulnerable nation in 2026. Investment in early warning systems and resilient infrastructure is critical."
+  },
+  "title": "Manila: Ground Zero for the World's Deadliest Typhoons",
+  "summary": "The Philippines is the most typhoon-exposed nation, with a 2025 super-cluster of six typhoons in 30 days pushing it to the top of the Climate Risk Index.",
+  "sources": [
+    "https://www.pagasa.dph.gov.ph/",
+    "https://www.emdat.be/",
+    "https://www.germanwatch.org/en/cri"
+  ],
+  "series": [
+    { "year": 2015, "value": 15 },
+    { "year": 2016, "value": 12 },
+    { "year": 2017, "value": 14 },
+    { "year": 2018, "value": 16 },
+    { "year": 2019, "value": 13 },
+    { "year": 2020, "value": 18 },
+    { "year": 2021, "value": 15 },
+    { "year": 2022, "value": 17 }
+  ]
+}

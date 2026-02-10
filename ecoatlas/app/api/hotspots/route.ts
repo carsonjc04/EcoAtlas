@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
-export const revalidate = 60;
+export const dynamic = "force-static";
 
 const listItemSchema = z.object({
   id: z.string(),

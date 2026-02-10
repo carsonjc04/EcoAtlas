@@ -1,0 +1,34 @@
+{
+  "id": "hs-009",
+  "story": {
+    "headline": "The Permian Basin: America's Methane Super-Emitter",
+    "summary": "The Permian Basin spanning West Texas and New Mexico is the most productive oil and gas region in the United States, and one of the world's largest sources of methane leakage, confirmed by multiple satellite missions.",
+    "climateImpact": "Methane leaking from Permian Basin wells, pipelines, and processing facilities has a warming potential 80x greater than CO₂ over 20 years, making it a critical near-term climate driver.",
+    "causeEffect": [
+      "Rapid drilling expansion outpaces infrastructure",
+      "Wells and pipelines leak methane continuously",
+      "Routine flaring burns off excess gas, releasing CO₂",
+      "Methane has 80x the warming potential of CO₂ over 20 years",
+      "EPA reporting shows persistent underestimation of leaks"
+    ],
+    "scaleContext": "The Permian Basin produces 5.9 million barrels of oil per day. Satellite data from Sentinel-5P and Carbon Mapper estimate methane leakage at 2.7 Mt/year — equivalent to the emissions of 16 million cars.",
+    "outlook": "New EPA methane regulations and satellite monitoring could reduce leakage, but production continues to expand rapidly."
+  },
+  "title": "The Permian Basin: America's Methane Super-Emitter",
+  "summary": "The Permian Basin is the most productive US oil/gas region and one of the world's largest methane leak sources, confirmed by satellite monitoring.",
+  "sources": [
+    "https://www.epa.gov/ghgreporting",
+    "https://www.iea.org/reports/methane-tracker",
+    "https://sentinel.esa.int/web/sentinel/missions/sentinel-5p"
+  ],
+  "series": [
+    { "year": 2015, "value": 1.4 },
+    { "year": 2016, "value": 1.5 },
+    { "year": 2017, "value": 1.8 },
+    { "year": 2018, "value": 2.1 },
+    { "year": 2019, "value": 2.4 },
+    { "year": 2020, "value": 2.2 },
+    { "year": 2021, "value": 2.5 },
+    { "year": 2022, "value": 2.7 }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "hs-013",
+  "story": {
+    "headline": "Small Islands Face Existential Threat From Intensifying Storms",
+    "summary": "St. Vincent and the Grenadines, a small island developing state in the Caribbean, faces increasingly severe hurricanes and tropical storms. Warmer ocean temperatures are fueling more intense and rapid-onset storms.",
+    "climateImpact": "Climate change is increasing sea surface temperatures, which drives stronger hurricane formation. For small island nations, a single Category 4 or 5 storm can devastate the entire economy.",
+    "causeEffect": [
+      "Warmer ocean temperatures fuel stronger hurricanes",
+      "Sea level rise amplifies storm surge damage",
+      "Rapid intensification makes storms harder to prepare for",
+      "Infrastructure damage exceeds GDP, crippling recovery",
+      "Agricultural losses threaten food security"
+    ],
+    "scaleContext": "Hurricane Beryl in 2024 became the earliest Category 5 Atlantic hurricane in recorded history. Storm damage costs in the Caribbean often exceed 200% of a nation's annual GDP.",
+    "outlook": "Without global emissions reductions and increased climate finance for adaptation, small island states face repeated catastrophic losses and potential uninhabitability."
+  },
+  "title": "Small Islands Face Existential Threat From Intensifying Storms",
+  "summary": "St. Vincent and the Grenadines faces increasingly severe hurricanes driven by warmer ocean temperatures, with damage costs often exceeding annual GDP.",
+  "sources": [
+    "https://www.emdat.be/",
+    "https://www.germanwatch.org/en/cri",
+    "https://www.nhc.noaa.gov/"
+  ],
+  "series": [
+    { "year": 2015, "value": 3 },
+    { "year": 2016, "value": 2 },
+    { "year": 2017, "value": 5 },
+    { "year": 2018, "value": 4 },
+    { "year": 2019, "value": 3 },
+    { "year": 2020, "value": 6 },
+    { "year": 2021, "value": 7 },
+    { "year": 2022, "value": 5 }
+  ]
+}

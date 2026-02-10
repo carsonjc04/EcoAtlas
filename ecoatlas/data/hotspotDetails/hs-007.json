@@ -1,28 +1,34 @@
 {
   "id": "hs-007",
   "story": {
-    "headline": "Peatland Drainage Drives Persistent Emissions",
-    "summary": "Drained peatlands release stored carbon through oxidation and fires, creating long-lived emissions sources.",
-    "climateImpact": "Peat soils store large carbon stocks; when drained or burned, they emit CO₂ and amplify global warming.",
+    "headline": "Kalimantan's Peatland Fires Release Billions of Tons of Carbon",
+    "summary": "Kalimantan (Indonesian Borneo) contains some of the world's deepest tropical peatlands. Drainage for palm oil plantations and pulpwood has made these carbon-rich soils extremely fire-prone, turning the region into a major emissions source.",
+    "climateImpact": "Peat fires burn underground for weeks or months, releasing massive quantities of CO₂ and particulate matter. During the 2015 fire crisis, Indonesia's daily emissions briefly exceeded those of the United States.",
     "causeEffect": [
-      "Drainage lowers water tables",
-      "Exposed peat oxidizes and releases CO₂",
-      "Dry conditions increase fire risk",
-      "Emissions persist year after year"
+      "Drainage for palm oil and pulpwood lowers water tables",
+      "Exposed peat oxidizes and releases CO₂ continuously",
+      "Dry conditions trigger fires that burn deep into peat soil",
+      "Peat fires smolder underground for weeks, resisting suppression",
+      "Smoke haze affects health across Southeast Asia"
     ],
-    "scaleContext": "Southeast Asian peatlands hold some of the densest carbon stocks on Earth.",
-    "outlook": "Without restoration, emissions continue and fire seasons become more severe."
+    "scaleContext": "Kalimantan's peatlands hold an estimated 57 billion tons of carbon. The 2015 fire season alone released an estimated 1.62 Gt CO₂e in just a few months. Annual fire detections via NASA FIRMS remain in the tens of thousands.",
+    "outlook": "Indonesia has committed to peatland restoration, but enforcement is uneven. Without rewetting degraded peatlands, fire risk remains extreme during El Niño years."
   },
-  "title": "Peatland Drainage Drives Persistent Emissions",
-  "summary": "Drained peatlands release stored carbon through oxidation and fires, creating long-lived emissions sources.",
+  "title": "Kalimantan's Peatland Fires Release Billions of Tons of Carbon",
+  "summary": "Kalimantan's drained peatlands are extremely fire-prone, with the 2015 crisis releasing an estimated 1.62 Gt CO₂e in months.",
   "sources": [
-    "https://example.org/peatland-brief"
+    "https://firms.modaps.eosdis.nasa.gov/",
+    "https://www.globalforestwatch.org/",
+    "https://www.wri.org/"
   ],
   "series": [
-    { "year": 2019, "value": 780 },
-    { "year": 2020, "value": 820 },
-    { "year": 2021, "value": 790 },
-    { "year": 2022, "value": 810 }
+    { "year": 2015, "value": 1620 },
+    { "year": 2016, "value": 420 },
+    { "year": 2017, "value": 380 },
+    { "year": 2018, "value": 450 },
+    { "year": 2019, "value": 890 },
+    { "year": 2020, "value": 520 },
+    { "year": 2021, "value": 480 },
+    { "year": 2022, "value": 510 }
   ]
 }
-

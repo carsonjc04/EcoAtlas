@@ -1,0 +1,34 @@
+{
+  "id": "hs-008",
+  "story": {
+    "headline": "China's Coal Heartland Is a Global Super-Emitter",
+    "summary": "Shanxi Province is China's largest coal-producing region and one of the world's most concentrated sources of greenhouse gas emissions. Sentinel-5P satellite data has identified persistent CO₂ and methane plumes over the region.",
+    "climateImpact": "Coal mining and combustion from Shanxi release massive quantities of CO₂ and methane, making this single province a top global emissions contributor.",
+    "causeEffect": [
+      "Shanxi produces over 1 billion tons of coal annually",
+      "Coal combustion releases CO₂ at industrial scale",
+      "Coal seam methane venting adds a potent greenhouse gas",
+      "Coal-fired power plants supply much of northern China's energy",
+      "Local air pollution causes severe health impacts"
+    ],
+    "scaleContext": "Shanxi alone accounts for roughly 25% of China's coal production. China produces and consumes over half the world's coal. The province's emissions rival those of many entire countries.",
+    "outlook": "China has pledged carbon neutrality by 2060, but coal production in Shanxi continues to expand in the short term to meet energy security demands."
+  },
+  "title": "China's Coal Heartland Is a Global Super-Emitter",
+  "summary": "Shanxi Province produces over 1 billion tons of coal annually, making it one of the world's most concentrated greenhouse gas emission sources.",
+  "sources": [
+    "https://globalenergymonitor.org/",
+    "https://climatetrace.org/",
+    "https://sentinel.esa.int/web/sentinel/missions/sentinel-5p"
+  ],
+  "series": [
+    { "year": 2015, "value": 980 },
+    { "year": 2016, "value": 940 },
+    { "year": 2017, "value": 1010 },
+    { "year": 2018, "value": 1050 },
+    { "year": 2019, "value": 1080 },
+    { "year": 2020, "value": 1020 },
+    { "year": 2021, "value": 1120 },
+    { "year": 2022, "value": 1150 }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "hs-011",
+  "story": {
+    "headline": "The Sudd: One of the World's Largest Natural Methane Sources",
+    "summary": "The Sudd is one of the largest tropical wetlands on Earth, spanning over 30,000 km² in South Sudan. As organic matter decomposes in its waterlogged soils, it releases significant quantities of methane — a natural but climate-relevant process.",
+    "climateImpact": "Natural wetland methane emissions from the Sudd contribute to the global methane budget. As temperatures rise, warmer conditions could accelerate microbial decomposition and increase emissions further.",
+    "causeEffect": [
+      "Waterlogged conditions create anaerobic decomposition",
+      "Microbial activity releases methane from organic matter",
+      "Warming temperatures accelerate methane production",
+      "Changing hydrology from upstream dams alters wetland extent",
+      "Political instability limits research and monitoring"
+    ],
+    "scaleContext": "Global wetlands are the single largest natural source of methane, contributing approximately 150-220 Mt CH₄/year. The Sudd is estimated to contribute 3-7 Mt/year of this total.",
+    "outlook": "Climate-driven changes in rainfall and temperature could either expand or contract the Sudd, with uncertain implications for future methane emissions."
+  },
+  "title": "The Sudd: One of the World's Largest Natural Methane Sources",
+  "summary": "The Sudd wetlands in South Sudan are one of the world's largest natural methane sources, estimated to emit 3-7 Mt CH₄/year.",
+  "sources": [
+    "https://edgar.jrc.ec.europa.eu/",
+    "https://www.globalcarbonproject.org/methanebudget/"
+  ],
+  "series": [
+    { "year": 2015, "value": 4.2 },
+    { "year": 2016, "value": 4.5 },
+    { "year": 2017, "value": 4.8 },
+    { "year": 2018, "value": 5.1 },
+    { "year": 2019, "value": 5.3 },
+    { "year": 2020, "value": 5.0 },
+    { "year": 2021, "value": 5.5 },
+    { "year": 2022, "value": 5.7 }
+  ]
+}

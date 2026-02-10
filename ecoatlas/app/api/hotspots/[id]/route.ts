@@ -7,7 +7,16 @@ import { metricsSnapshots } from "../../../../data/metricsSnapshots";
 import { sourceMap } from "../../../../src/data/sourceMap";
 import { amazonPrimaryForestLoss } from "../../../../src/data/metricsAmazonForestLoss";
 
-export const revalidate = 60;
+export const dynamic = "force-static";
+
+export async function generateStaticParams() {
+  const raw = await readFile(
+    path.join(process.cwd(), "data", "hotspots.json"),
+    "utf-8"
+  );
+  const hotspots = JSON.parse(raw) as { id: string }[];
+  return hotspots.map((h) => ({ id: h.id }));
+}
 
 const listItemSchema = z.object({
   id: z.string(),
@@ -16,6 +25,7 @@ const listItemSchema = z.object({
   lng: z.number(),
   severity: z.number(),
   topic: z.string(),
+  type: z.enum(["driver", "impact"]),
 });
 const listSchema = z.array(listItemSchema);
 

@@ -1,0 +1,34 @@
+{
+  "id": "hs-016",
+  "story": {
+    "headline": "Dhaka Sinks While the Seas Rise",
+    "summary": "Dhaka, one of the world's most densely populated cities, faces a dual threat: annual monsoon flooding that submerges up to a third of Bangladesh, and accelerating sea level rise that threatens to permanently inundate low-lying coastal areas.",
+    "climateImpact": "Sea level rise and intensified monsoons driven by climate change increase flooding frequency and severity, displacing millions and threatening food production in one of the world's most climate-vulnerable nations.",
+    "causeEffect": [
+      "Global warming accelerates ice sheet melting and thermal expansion",
+      "Sea levels in the Bay of Bengal are rising 3-4 mm/year",
+      "Warmer atmosphere holds more moisture, intensifying monsoons",
+      "Monsoon flooding submerges 20-30% of Bangladesh annually",
+      "Saltwater intrusion ruins agricultural land and freshwater supplies"
+    ],
+    "scaleContext": "Bangladesh is home to 170 million people, with 30 million living in coastal zones less than 1 meter above sea level. By 2050, climate change could displace 13 million Bangladeshis internally.",
+    "outlook": "Without massive investment in flood defenses, managed retreat, and global emissions reductions, Dhaka and coastal Bangladesh face catastrophic losses within decades."
+  },
+  "title": "Dhaka Sinks While the Seas Rise",
+  "summary": "Dhaka faces annual monsoon flooding and accelerating sea level rise, with 30 million people living in zones less than 1m above sea level.",
+  "sources": [
+    "https://www.emdat.be/",
+    "https://www.worldbank.org/en/country/bangladesh/overview",
+    "https://cds.climate.copernicus.eu/"
+  ],
+  "series": [
+    { "year": 2015, "value": 18 },
+    { "year": 2016, "value": 22 },
+    { "year": 2017, "value": 31 },
+    { "year": 2018, "value": 25 },
+    { "year": 2019, "value": 28 },
+    { "year": 2020, "value": 35 },
+    { "year": 2021, "value": 30 },
+    { "year": 2022, "value": 33 }
+  ]
+}

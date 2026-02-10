@@ -1,0 +1,34 @@
+{
+  "id": "hs-015",
+  "story": {
+    "headline": "The Pantanal Is Burning: World's Largest Tropical Wetland in Crisis",
+    "summary": "The Pantanal, the world's largest tropical wetland spanning Brazil, Bolivia, and Paraguay, experienced record-breaking fires in 2020 and 2024 that burned over 25% of the ecosystem. Prolonged drought and rising temperatures are transforming this biodiversity hotspot.",
+    "climateImpact": "Fires in the Pantanal release stored carbon from peat soils and vegetation, while drought reduces the wetland's capacity to function as a carbon sink and water regulator.",
+    "causeEffect": [
+      "Climate-driven drought reduces water levels in the wetland",
+      "Dry conditions make vegetation highly flammable",
+      "Agricultural fires escape into the wetland",
+      "Peat and organic soil fires release stored carbon",
+      "Biodiversity loss disrupts ecosystem services"
+    ],
+    "scaleContext": "The Pantanal spans 150,000 km² and is home to over 4,700 plant and animal species. In 2020, fires burned approximately 30% of the entire biome. 2024 fires were on track to exceed this.",
+    "outlook": "Continued warming and deforestation in upstream watersheds could permanently alter the Pantanal's flood cycle, converting wetland to degraded savanna."
+  },
+  "title": "The Pantanal Is Burning: World's Largest Tropical Wetland in Crisis",
+  "summary": "The Pantanal experienced record fires in 2020 and 2024, burning over 25% of the world's largest tropical wetland.",
+  "sources": [
+    "https://firms.modaps.eosdis.nasa.gov/",
+    "http://terrabrasilis.dpi.inpe.br/",
+    "https://www.globalforestwatch.org/"
+  ],
+  "series": [
+    { "year": 2015, "value": 12000 },
+    { "year": 2016, "value": 15000 },
+    { "year": 2017, "value": 18000 },
+    { "year": 2018, "value": 22000 },
+    { "year": 2019, "value": 35000 },
+    { "year": 2020, "value": 41000 },
+    { "year": 2021, "value": 19000 },
+    { "year": 2022, "value": 28000 }
+  ]
+}

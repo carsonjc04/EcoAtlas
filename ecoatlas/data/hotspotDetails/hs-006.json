@@ -1,0 +1,34 @@
+{
+  "id": "hs-006",
+  "story": {
+    "headline": "The World's Largest Oil Field Drives Massive CO₂ Emissions",
+    "summary": "Saudi Arabia's Ghawar oil field is the largest conventional oil field ever discovered, producing approximately 3.8 million barrels per day. Its extraction and downstream combustion represent one of the single largest sources of CO₂ emissions on the planet.",
+    "climateImpact": "Oil extracted from Ghawar, when burned, releases billions of tons of CO₂ into the atmosphere, making it a primary driver of global warming.",
+    "causeEffect": [
+      "Ghawar produces ~3.8 million barrels of oil daily",
+      "Extraction involves energy-intensive pumping and gas flaring",
+      "Downstream combustion of this oil releases massive CO₂",
+      "Flaring and venting release additional methane",
+      "Revenue sustains global fossil fuel dependency"
+    ],
+    "scaleContext": "Ghawar has produced over 75 billion barrels since 1951. At current rates, the oil burned from Ghawar alone contributes approximately 0.5 Gt CO₂ per year — roughly 1% of global emissions.",
+    "outlook": "Saudi Arabia plans to increase production capacity. Without rapid global transition away from oil, Ghawar's emissions will continue for decades."
+  },
+  "title": "The World's Largest Oil Field Drives Massive CO₂ Emissions",
+  "summary": "Ghawar is the world's largest oil field, producing ~3.8 million barrels/day and contributing approximately 1% of global CO₂ emissions through downstream combustion.",
+  "sources": [
+    "https://climatetrace.org/",
+    "https://www.iea.org/reports/world-energy-outlook-2024",
+    "https://globalenergymonitor.org/"
+  ],
+  "series": [
+    { "year": 2015, "value": 520 },
+    { "year": 2016, "value": 510 },
+    { "year": 2017, "value": 530 },
+    { "year": 2018, "value": 545 },
+    { "year": 2019, "value": 540 },
+    { "year": 2020, "value": 480 },
+    { "year": 2021, "value": 515 },
+    { "year": 2022, "value": 550 }
+  ]
+}
