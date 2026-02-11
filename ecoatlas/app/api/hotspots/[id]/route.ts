@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { MetricValueSchema } from "../../../../src/lib/schemas/metrics";
 import { metricsSnapshots } from "../../../../data/metricsSnapshots";
 import { sourceMap } from "../../../../src/data/sourceMap";
-import { amazonPrimaryForestLoss } from "../../../../src/data/metricsAmazonForestLoss";
 
 export const dynamic = "force-static";
 
@@ -51,13 +49,8 @@ const detailSchema = z.object({
     })
   ),
 });
-const co2SeriesSchema = z.array(
-  z.object({
-    date: z.string(),
-    value: z.number(),
-  })
-);
-const methaneSeriesSchema = z.array(
+
+const seriesPointSchema = z.array(
   z.object({
     date: z.string(),
     value: z.number(),
@@ -70,44 +63,14 @@ type HotspotStory = z.infer<typeof storySchema>;
 
 const dataDir = path.join(process.cwd(), "data");
 const detailDir = path.join(dataDir, "hotspotDetails");
+const seriesDir = path.join(dataDir, "series");
 const listPath = path.join(dataDir, "hotspots.json");
-const co2Path = path.join(dataDir, "series", "co2_mlo_monthly.json");
-
-const readHotspotsList = async (): Promise<HotspotListItem[]> => {
-  const raw = await readFile(listPath, "utf-8");
-  const parsed = JSON.parse(raw);
-  return listSchema.parse(parsed);
-};
-
-const readHotspotDetail = async (id: string): Promise<HotspotDetail> => {
-  const filePath = path.join(detailDir, `${id}.json`);
-  const raw = await readFile(filePath, "utf-8");
-  const parsed = JSON.parse(raw);
-  return detailSchema.parse(parsed);
-};
-
-const readCo2Series = async () => {
-  const raw = await readFile(co2Path, "utf-8");
-  const parsed = JSON.parse(raw);
-  return co2SeriesSchema.parse(parsed);
-};
-
-const readSeriesFromPath = async (seriesPath: string) => {
-  const raw = await readFile(seriesPath, "utf-8");
-  const parsed = JSON.parse(raw);
-  return methaneSeriesSchema.parse(parsed);
-};
 
 const metricValueSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("series"),
     unit: z.string(),
-    series: z.array(
-      z.object({
-        date: z.string(),
-        value: z.number(),
-      })
-    ),
+    series: seriesPointSchema,
     sourceId: z.string(),
   }),
   z.object({
@@ -125,6 +88,19 @@ const snapshotLookup = new Map(
     metricValueSchema.parse(value),
   ])
 );
+
+const readHotspotsList = async (): Promise<HotspotListItem[]> => {
+  const raw = await readFile(listPath, "utf-8");
+  const parsed = JSON.parse(raw);
+  return listSchema.parse(parsed);
+};
+
+const readHotspotDetail = async (id: string): Promise<HotspotDetail> => {
+  const filePath = path.join(detailDir, `${id}.json`);
+  const raw = await readFile(filePath, "utf-8");
+  const parsed = JSON.parse(raw);
+  return detailSchema.parse(parsed);
+};
 
 // Returns full details for a single hotspot.
 export async function GET(
@@ -176,38 +152,28 @@ export async function GET(
 
   if (mapping) {
     metrics = {};
+
     for (const metric of mapping.metrics) {
-      if (metric.metricKey === "co2_ppm_monthly") {
-        const series = await readCo2Series();
-        metrics[metric.metricKey] = MetricValueSchema.parse({
-          kind: "series",
-          unit: "ppm",
-          sourceId: "noaa_mlo_co2_monthly",
-          series,
-        });
-        continue;
-      }
-      if (metric.metricKey === "amazon_primary_forest_loss_mha") {
-        metrics[metric.metricKey] = MetricValueSchema.parse(
-          amazonPrimaryForestLoss
-        );
-        continue;
-      }
-      if (metric.dataPath?.startsWith("data/series/")) {
-        const seriesPath = path.join(process.cwd(), metric.dataPath);
-        const series = await readSeriesFromPath(seriesPath);
-        metrics[metric.metricKey] = MetricValueSchema.parse({
+      // Try reading a series JSON file from data/series/{hotspotId}/{metricKey}.json
+      const seriesPath = path.join(seriesDir, id, `${metric.metricKey}.json`);
+      try {
+        const raw = await readFile(seriesPath, "utf-8");
+        const series = seriesPointSchema.parse(JSON.parse(raw));
+        metrics[metric.metricKey] = metricValueSchema.parse({
           kind: "series",
           unit: metric.unit ?? "",
           sourceId: metric.sources[0],
           series,
         });
         continue;
+      } catch {
+        // No series file found — fall through to snapshot lookup
       }
 
+      // Fall back to snapshot values
       const snapshot = snapshotLookup.get(metric.metricKey);
       if (snapshot) {
-        metrics[metric.metricKey] = MetricValueSchema.parse(snapshot);
+        metrics[metric.metricKey] = metricValueSchema.parse(snapshot);
       }
     }
 
@@ -238,4 +204,3 @@ export async function GET(
     },
   });
 }
-

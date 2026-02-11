@@ -10,7 +10,8 @@ const outputPath = path.join(
   "..",
   "data",
   "series",
-  "co2_mlo_monthly.json"
+  "hs-000",
+  "co2_ppm_monthly.json"
 );
 
 const parseCo2Text = (text) => {
