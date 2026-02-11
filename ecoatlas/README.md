@@ -2,9 +2,10 @@
 
 A web-based climate data visualization tool that maps global climate hotspots on an interactive 3D globe. Users can explore 16 locations — from fossil fuel super-emitters to regions facing severe climate impacts — with narrative context, time series data, and links to primary scientific sources.
 
-> **Live:** [your-link-here]
+https://ecoatlas-app.vercel.app
 
-![EcoAtlas Screenshot](./screenshot.png)
+<img width="1195" height="725" alt="Screenshot 2026-02-10 at 8 11 06 pm" src="https://github.com/user-attachments/assets/9c7fdc38-e238-4c32-94cd-b2f3be9c8cb3" />
+
 
 ## What It Does
 
