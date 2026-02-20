@@ -125,13 +125,13 @@ export default function Sidebar({
       <div
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.1)",
-          padding: "16px 20px",
+          padding: "20px 24px",
         }}
       >
         <h2 style={{ fontSize: 20, fontWeight: 700, color: "#ffffff", margin: 0 }}>
           {title}
         </h2>
-        <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 10 }}>
           {badgeLabel && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: badgeColor }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: badgeColor }} />
@@ -144,7 +144,7 @@ export default function Sidebar({
 
       {/* Content area */}
       <ScrollArea className="flex-1" style={{ backgroundColor: "#1a1a1a" }}>
-        <div style={{ padding: "16px 20px" }}>
+        <div style={{ padding: "20px 24px" }}>
           {activeTab === "story" && story}
           {activeTab === "data" && data}
           {activeTab === "trends" && trends}

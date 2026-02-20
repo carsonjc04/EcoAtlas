@@ -439,6 +439,17 @@ function TimeDial({
   );
 }
 
+const sectionHeaderStyle: React.CSSProperties = {
+  fontSize: 13,
+  fontWeight: 600,
+  color: "#9ca3af",
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+  marginBottom: 10,
+  margin: 0,
+  paddingBottom: 10,
+};
+
 export default function GlobeView() {
   const [hotspots, setHotspots] = useState<HotspotListItem[]>([]);
   const [selectedHotspot, setSelectedHotspot] =
@@ -452,9 +463,6 @@ export default function GlobeView() {
   const [loadingHotspots, setLoadingHotspots] = useState(false);
   const [errorHotspots, setErrorHotspots] = useState<string | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
-  const [expandedMetrics, setExpandedMetrics] = useState<Record<string, boolean>>(
-    {}
-  );
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1692,62 +1700,56 @@ export default function GlobeView() {
           onTabChange={(tab) => setActiveTab(tab)}
           onClose={() => setIsPanelOpen(false)}
           story={
-            <div className="space-y-6">
-              <section>
-                <h3 className="mb-2 text-base font-bold text-white">
-                  Description
-                </h3>
-                <p className="mb-2 text-[15px] font-medium leading-snug text-white">
+            <div>
+              <section style={{ padding: "20px 0" }}>
+                <h3 style={sectionHeaderStyle}>Description</h3>
+                <p style={{ marginBottom: 8, fontSize: 15, fontWeight: 500, lineHeight: 1.4, color: "#ffffff" }}>
                   {selectedHotspot.story?.headline ??
                     selectedHotspot.title ??
                     "Story unavailable"}
                 </p>
-                <p className="text-sm leading-relaxed text-gray-300">
+                <p style={{ fontSize: 14, lineHeight: 1.7, color: "#d1d5db", margin: 0 }}>
                   {selectedHotspot.story?.summary ??
                     selectedHotspot.summary ??
                     "Summary unavailable."}
                 </p>
               </section>
 
-              <div className="h-px bg-white/10" />
+              <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-              <section>
-                <h3 className="mb-2 text-base font-bold text-white">
+              <section style={{ padding: "20px 0" }}>
+                <h3 style={sectionHeaderStyle}>
                   {selectedHotspot.type === "driver"
                     ? "Climate Contribution"
                     : "Climate Impact"}
                 </h3>
-                <p className="text-sm leading-relaxed text-gray-300">
+                <p style={{ fontSize: 14, lineHeight: 1.7, color: "#d1d5db", margin: 0 }}>
                   {selectedHotspot.story?.climateImpact ??
                     "Global warming impacts are being assessed."}
                 </p>
               </section>
 
-              <div className="h-px bg-white/10" />
+              <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-              <section>
-                <h3 className="mb-2 text-base font-bold text-white">
-                  Cause → Effect
-                </h3>
-                <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed text-gray-300">
+              <section style={{ padding: "20px 0" }}>
+                <h3 style={sectionHeaderStyle}>Cause → Effect</h3>
+                <ul style={{ margin: 0, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 6 }}>
                   {(selectedHotspot.story?.causeEffect ?? [
                     "Data is being gathered",
                     "Impacts are under review",
                     "More analysis is expected",
                   ]).map((item) => (
-                    <li key={item}>{item}</li>
+                    <li key={item} style={{ fontSize: 14, lineHeight: 1.6, color: "#d1d5db" }}>{item}</li>
                   ))}
                 </ul>
               </section>
 
               {selectedHotspot.story?.scaleContext && (
                 <>
-                  <div className="h-px bg-white/10" />
-                  <section>
-                    <h3 className="mb-2 text-base font-bold text-white">
-                      Scale & Context
-                    </h3>
-                    <p className="text-sm leading-relaxed text-gray-300">
+                  <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.1)" }} />
+                  <section style={{ padding: "20px 0" }}>
+                    <h3 style={sectionHeaderStyle}>Scale & Context</h3>
+                    <p style={{ fontSize: 14, lineHeight: 1.7, color: "#d1d5db", margin: 0 }}>
                       {selectedHotspot.story.scaleContext}
                     </p>
                   </section>
@@ -1756,12 +1758,10 @@ export default function GlobeView() {
 
               {selectedHotspot.story?.outlook && (
                 <>
-                  <div className="h-px bg-white/10" />
-                  <section>
-                    <h3 className="mb-2 text-base font-bold text-white">
-                      Outlook
-                    </h3>
-                    <p className="text-sm leading-relaxed text-gray-300">
+                  <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.1)" }} />
+                  <section style={{ padding: "20px 0" }}>
+                    <h3 style={sectionHeaderStyle}>Outlook</h3>
+                    <p style={{ fontSize: 14, lineHeight: 1.7, color: "#d1d5db", margin: 0 }}>
                       {selectedHotspot.story.outlook}
                     </p>
                   </section>
@@ -1772,7 +1772,7 @@ export default function GlobeView() {
           data={(() => {
             if (loadingDetail) {
               return (
-                <div className="animate-pulse rounded-md border border-white/10 bg-[#252525] p-3 text-sm text-gray-300">
+                <div style={{ padding: 16, borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#252525", fontSize: 14, color: "#9ca3af" }}>
                   Loading details...
                 </div>
               );
@@ -1782,6 +1782,7 @@ export default function GlobeView() {
             const mapping = sourceMap.hotspots.find(
               (item) => item.hotspotId === selectedHotspot.id
             );
+            const accentColor = selectedHotspot.type === "driver" ? "#f87171" : "#60a5fa";
             const rows =
               mapping?.metrics.map((metricMapping) => ({
                 mapping: metricMapping,
@@ -1790,7 +1791,7 @@ export default function GlobeView() {
 
             if (rows.length > 0) {
               return (
-                <div className="space-y-4">
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {rows.map(({ mapping: metricMapping, value }) => {
                     const source = sourceMap.sources.find(
                       (item) => item.id === metricMapping.sources[0]
@@ -1804,18 +1805,16 @@ export default function GlobeView() {
                       return (
                         <div
                           key={metricMapping.metricKey}
-                          className="rounded-lg border border-white/10 bg-[#252525] p-4 text-gray-100"
+                          style={{ borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#1f1f1f", padding: 20 }}
                         >
-                          <div className="text-[11px] uppercase tracking-wide text-gray-400">
+                          <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af" }}>
                             {metricTitle}
                           </div>
-                          <div className="mt-1 text-xs text-gray-400">
+                          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
                             {metricMapping.description}
                           </div>
-                          <div className="mt-3 text-sm text-gray-300">
-                            {metricMapping.status === "planned"
-                              ? "Planned"
-                              : "Not available"}
+                          <div style={{ fontSize: 13, color: "#6b7280", marginTop: 12 }}>
+                            Data not yet available
                           </div>
                         </div>
                       );
@@ -1825,7 +1824,7 @@ export default function GlobeView() {
                       const formattedValue = `${formatNumber(
                         value.value,
                         unit
-                      )}${unit} (as of ${value.asOfYear})`;
+                      )} ${unit} (as of ${value.asOfYear})`;
 
                       return (
                         <MetricCard
@@ -1835,44 +1834,24 @@ export default function GlobeView() {
                           description={metricMapping.description}
                           sourceName={source?.publisher ?? source?.name}
                           sourceUrl={source?.url}
+                          sourceCadence={source?.cadence}
+                          accentColor={accentColor}
                           formattedValue={formattedValue}
                         />
                       );
                     }
 
-                    const isExpanded =
-                      expandedMetrics[metricMapping.metricKey] ?? false;
-                    const seriesToShow = isExpanded
-                      ? value.series
-                      : value.series.slice(-12);
-                    const metricForCard = { ...value, series: seriesToShow };
-
                     return (
-                      <div key={metricMapping.metricKey}>
-                        <MetricCard
-                          title={metricTitle}
-                          metric={metricForCard}
-                          description={metricMapping.description}
-                          sourceName={source?.publisher ?? source?.name}
-                          sourceUrl={source?.url}
-                          showTable
-                          tablePoints={seriesToShow.length}
-                        />
-                        {value.series.length > 12 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setExpandedMetrics((prev) => ({
-                                ...prev,
-                                [metricMapping.metricKey]: !isExpanded,
-                              }))
-                            }
-                            className="mt-2 text-xs text-gray-300 transition hover:text-white"
-                          >
-                            {isExpanded ? "Show less" : "Show all"}
-                          </button>
-                        )}
-                      </div>
+                      <MetricCard
+                        key={metricMapping.metricKey}
+                        title={metricTitle}
+                        metric={value}
+                        description={metricMapping.description}
+                        sourceName={source?.publisher ?? source?.name}
+                        sourceUrl={source?.url}
+                        sourceCadence={source?.cadence}
+                        accentColor={accentColor}
+                      />
                     );
                   })}
                 </div>
