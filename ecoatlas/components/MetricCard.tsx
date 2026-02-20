@@ -1,141 +1,282 @@
+"use client";
+
+import { useState } from "react";
 import type { MetricValue } from "@/src/lib/schemas/metrics";
-import Sparkline from "@/components/Sparkline";
+import DataChart from "@/components/Sparkline";
 
 type MetricCardProps = {
   title: string;
   metric: MetricValue;
   sourceName?: string;
   sourceUrl?: string;
-  scaleContext?: string;
-  formattedValue?: string;
+  sourceCadence?: string;
   description?: string;
+  accentColor?: string;
+  formattedValue?: string;
+  scaleContext?: string;
   showTable?: boolean;
   tablePoints?: number;
 };
 
-const formatNumber = (value: number) =>
-  value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+const formatNum = (value: number, unit?: string): string => {
+  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (Math.abs(value) >= 10_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+};
+
+const formatDate = (date: string): string => {
+  if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.slice(0, 7);
+  if (/^\d{4}-\d{2}/.test(date)) return date.slice(0, 7);
+  return date;
+};
 
 export default function MetricCard({
   title,
   metric,
   sourceName,
   sourceUrl,
-  scaleContext,
-  formattedValue,
+  sourceCadence,
   description,
-  showTable = false,
+  accentColor = "#60a5fa",
+  formattedValue,
+  scaleContext,
 }: MetricCardProps) {
-  const renderSource = () => {
-    if (!sourceName) return null;
+  const [tableOpen, setTableOpen] = useState(false);
+
+  // --- Snapshot metric ---
+  if (metric.kind === "snapshot") {
+    const displayValue = formattedValue ?? `${formatNum(metric.value)} ${metric.unit}`;
     return (
-      <div className="mt-2 text-xs text-slate-400">
+      <div style={{
+        borderRadius: 8,
+        border: "1px solid rgba(255,255,255,0.1)",
+        backgroundColor: "#1f1f1f",
+        padding: 20,
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af" }}>
+          {title}
+        </div>
+        {description && (
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{description}</div>
+        )}
+        <div style={{ fontSize: 32, fontWeight: 700, color: "#ffffff", marginTop: 12 }}>
+          {displayValue}
+        </div>
+        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+          As of {metric.asOfYear}
+        </div>
+        {renderSource(sourceName, sourceUrl, sourceCadence)}
+      </div>
+    );
+  }
+
+  // --- Series metric ---
+  const { series, unit } = metric;
+  const first = series[0];
+  const last = series[series.length - 1];
+
+  // Trend calculation
+  const absoluteChange = last.value - first.value;
+  const percentChange = first.value !== 0
+    ? ((absoluteChange / Math.abs(first.value)) * 100)
+    : 0;
+  const isPositive = absoluteChange > 0;
+  const trendArrow = isPositive ? "↑" : absoluteChange < 0 ? "↓" : "→";
+  const trendColor = isPositive ? "#f87171" : absoluteChange < 0 ? "#4ade80" : "#9ca3af";
+
+  return (
+    <div style={{
+      borderRadius: 8,
+      border: "1px solid rgba(255,255,255,0.1)",
+      backgroundColor: "#1f1f1f",
+      overflow: "hidden",
+    }}>
+      {/* Header */}
+      <div style={{ padding: "16px 20px 0" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af" }}>
+          {title}
+        </div>
+        {description && (
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4, lineHeight: 1.5 }}>{description}</div>
+        )}
+      </div>
+
+      {/* Stats row */}
+      <div style={{
+        display: "flex",
+        gap: 0,
+        padding: "16px 20px",
+      }}>
+        {/* Latest value */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280", marginBottom: 4 }}>
+            Latest
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: "#ffffff", lineHeight: 1.1 }}>
+            {formatNum(last.value)}
+          </div>
+          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+            {unit} · {formatDate(last.date)}
+          </div>
+        </div>
+
+        {/* Change */}
+        <div style={{ flex: 1, borderLeft: "1px solid rgba(255,255,255,0.06)", paddingLeft: 16 }}>
+          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280", marginBottom: 4 }}>
+            Change
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: trendColor, lineHeight: 1.1 }}>
+            {trendArrow} {Math.abs(percentChange).toFixed(1)}%
+          </div>
+          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+            {isPositive ? "+" : ""}{formatNum(absoluteChange)} {unit}
+          </div>
+        </div>
+
+        {/* Period */}
+        <div style={{ flex: 0.7, borderLeft: "1px solid rgba(255,255,255,0.06)", paddingLeft: 16 }}>
+          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280", marginBottom: 4 }}>
+            Period
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#d1d5db", lineHeight: 1.3 }}>
+            {formatDate(first.date)}
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#d1d5db" }}>
+            {formatDate(last.date)}
+          </div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div style={{ padding: "0 8px 4px" }}>
+        <DataChart
+          series={series}
+          accentColor={accentColor}
+          unit={unit}
+          height={150}
+        />
+      </div>
+
+      {/* View data toggle + table */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <button
+          type="button"
+          onClick={() => setTableOpen(!tableOpen)}
+          style={{
+            width: "100%",
+            padding: "10px 20px",
+            fontSize: 12,
+            fontWeight: 500,
+            color: "#9ca3af",
+            backgroundColor: "transparent",
+            border: "none",
+            cursor: "pointer",
+            textAlign: "left",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            transition: "color 0.15s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "#ffffff"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "#9ca3af"; }}
+        >
+          <span>{tableOpen ? "Hide data" : "View data"}</span>
+          <svg
+            width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: tableOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {tableOpen && (
+          <div style={{ padding: "0 20px 16px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", padding: "6px 0", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                    Year
+                  </th>
+                  <th style={{ textAlign: "right", padding: "6px 0", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                    Value ({unit})
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {series.map((row, i) => (
+                  <tr key={row.date}>
+                    <td style={{
+                      padding: "6px 0",
+                      color: "#d1d5db",
+                      backgroundColor: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)",
+                    }}>
+                      {formatDate(row.date)}
+                    </td>
+                    <td style={{
+                      padding: "6px 0",
+                      textAlign: "right",
+                      color: "#ffffff",
+                      fontWeight: 500,
+                      fontVariantNumeric: "tabular-nums",
+                      backgroundColor: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)",
+                    }}>
+                      {row.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Source attribution */}
+      {(sourceName || scaleContext) && (
+        <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          {renderSource(sourceName, sourceUrl, sourceCadence)}
+          {scaleContext && (
+            <div style={{ marginTop: 8, fontSize: 12, color: "#9ca3af", lineHeight: 1.5 }}>
+              {scaleContext}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function renderSource(sourceName?: string, sourceUrl?: string, cadence?: string) {
+  if (!sourceName) return null;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+      <span style={{ fontSize: 11, color: "#6b7280" }}>
         Source:{" "}
         {sourceUrl ? (
           <a
             href={sourceUrl}
             target="_blank"
             rel="noreferrer"
-            className="underline decoration-slate-500 transition hover:text-slate-200 hover:decoration-slate-300"
+            style={{ color: "#60a5fa", textDecoration: "underline", textUnderlineOffset: 2 }}
           >
             {sourceName}
           </a>
         ) : (
           sourceName
         )}
-      </div>
-    );
-  };
-
-  const formatDate = (date: string) => {
-    if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.slice(0, 7);
-    if (/^\d{4}-\d{2}/.test(date)) return date.slice(0, 7);
-    return date;
-  };
-
-  if (metric.kind === "snapshot") {
-    const displayValue =
-      formattedValue ?? `${formatNumber(metric.value)}${metric.unit}`;
-    return (
-      <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-slate-100">
-        <div className="text-[11px] uppercase tracking-wide text-slate-400">
-          {title}
-        </div>
-        {description && (
-          <div className="mt-1 text-xs text-slate-400">{description}</div>
-        )}
-        <div className="mt-2 text-4xl font-semibold">{displayValue}</div>
-        {!formattedValue && (
-          <>
-            <div className="text-sm text-slate-300">{metric.unit}</div>
-            <div className="mt-1 text-xs text-slate-400">
-              As of {metric.asOfYear}
-            </div>
-          </>
-        )}
-        {renderSource()}
-        {scaleContext && (
-          <div className="mt-4 rounded-md border border-white/10 bg-white/5 p-3 text-xs text-slate-200">
-            <div className="mb-1 text-[11px] uppercase text-slate-400">
-              Scale context
-            </div>
-            {scaleContext}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  const series = metric.series;
-  const last = series[series.length - 1];
-
-  return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-slate-100">
-      <div className="text-[11px] uppercase tracking-wide text-slate-400">
-        {title}
-      </div>
-      {description && (
-        <div className="mt-1 text-xs text-slate-400">{description}</div>
-      )}
-      <div className="mt-2 text-4xl font-semibold">
-        {formatNumber(last.value)}
-      </div>
-      <div className="text-sm text-slate-300">{metric.unit}</div>
-      <div className="mt-1 text-xs text-slate-400">
-        Latest: {formatDate(last.date)}
-      </div>
-      <div className="mt-3 text-slate-200">
-        <Sparkline series={series} />
-      </div>
-      {showTable && (
-        <table className="mt-3 w-full border-collapse text-xs text-slate-300">
-          <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400">
-              <th className="py-1">Date</th>
-              <th className="py-1">Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {series.map((row) => (
-              <tr key={row.date} className="border-t border-white/10">
-                <td className="py-1">{formatDate(row.date)}</td>
-                <td className="py-1">
-                  {formatNumber(row.value)}
-                  {metric.unit}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {renderSource()}
-      {scaleContext && (
-        <div className="mt-4 rounded-md border border-white/10 bg-white/5 p-3 text-xs text-slate-200">
-          <div className="mb-1 text-[11px] uppercase text-slate-400">
-            Scale context
-          </div>
-          {scaleContext}
-        </div>
+      </span>
+      {cadence && (
+        <span style={{
+          fontSize: 10,
+          fontWeight: 500,
+          color: "#9ca3af",
+          backgroundColor: "rgba(255,255,255,0.06)",
+          padding: "2px 6px",
+          borderRadius: 4,
+          textTransform: "capitalize",
+        }}>
+          {cadence}
+        </span>
       )}
     </div>
   );
