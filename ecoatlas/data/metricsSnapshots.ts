@@ -1,3 +1,17 @@
+/**
+ * Manually curated metric snapshots — the fallback when no time-series file
+ * exists in data/series/ for a given metric.
+ *
+ * Each entry is a point-in-time value keyed by metricKey (matching sourceMap).
+ * The API detail route checks for a series file first; if none is found, it
+ * looks here. Values come from published reports and are tagged with
+ * `asOfYear` so the frontend can show the data vintage.
+ *
+ * As fetchers are implemented and series files are ingested, entries here
+ * become unused (the series file takes priority). They remain as a safety
+ * net in case a series file is deleted or a fetcher temporarily breaks.
+ */
+
 import type { MetricValue } from "../src/lib/schemas/metrics";
 
 export const metricsSnapshots: Record<string, MetricValue> = {

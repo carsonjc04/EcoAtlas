@@ -1,19 +1,28 @@
 /**
- * NASA FIRMS (Fire Information for Resource Management System) fetcher.
+ * NASA FIRMS fetcher — active fire detection counts by region.
  *
- * Uses the FIRMS API to get active fire counts within a bounding box,
- * aggregated by year. Covers wildfire and peatland fire hotspots.
+ * FIRMS (Fire Information for Resource Management System) provides
+ * near-real-time active fire data from MODIS and VIIRS satellites.
+ * This fetcher counts fire detections within a bounding box per year.
  *
- * API docs: https://firms.modaps.eosdis.nasa.gov/api/
+ * The FIRMS API has two tiers:
+ *   - Public: last 24h/48h only (very limited)
+ *   - MAP_KEY: up to 10 days per request (free, requires registration)
  *
- * Note: The FIRMS API requires a free MAP_KEY for extended queries.
- * Set the NASA_FIRMS_KEY environment variable.
- * Without a key, falls back to the public 24h/48h endpoint (limited).
+ * For historical annual data, FIRMS provides bulk archive downloads at
+ * https://firms.modaps.eosdis.nasa.gov/download/ — those would need
+ * a separate offline import script for full coverage.
+ *
+ * Coverage:
+ *   hs-003: California — wildfire area burned
+ *   hs-007: Kalimantan — peatland fires
+ *   hs-015: Pantanal — wetland fires
+ *
+ * Requires: NASA_FIRMS_KEY env var (free at https://firms.modaps.eosdis.nasa.gov/api/)
  */
 
 import type { Fetcher, FetcherConfig, SeriesPoint } from "./types";
 
-// Bounding boxes for fire-related hotspots
 const HOTSPOT_BBOX: Record<string, [number, number, number, number]> = {
   "hs-003": [-124, 32, -114, 42], // California
   "hs-007": [109, -5, 119, 3], // Kalimantan, Indonesia
@@ -52,14 +61,10 @@ export const fetchNasaFirms: Fetcher = async (
   const [lonMin, latMin, lonMax, latMax] = bbox;
   const area = `${lonMin},${latMin},${lonMax},${latMax}`;
 
-  // FIRMS supports VIIRS and MODIS. Use VIIRS_SNPP for better coverage.
-  // The area endpoint returns CSV with fire detections.
-  // We request up to 10 days of data (API limit per request) and aggregate.
-  // For historical annual data, FIRMS provides archive downloads, but the
-  // API gives recent data. For a full pipeline, you'd use their archive.
-
   try {
-    // Request the last 10 days of data as a sample
+    // VIIRS_SNPP_SP offers better spatial resolution than MODIS.
+    // The /area/ endpoint returns CSV with one row per fire detection.
+    // We request the maximum 10-day window the API allows per call.
     const url = `${BASE_URL}/area/csv/${apiKey}/VIIRS_SNPP_SP/${area}/10`;
     const response = await fetch(url);
 
@@ -75,7 +80,6 @@ export const fetchNasaFirms: Fetcher = async (
       return [];
     }
 
-    // Parse CSV header
     const header = lines[0].split(",");
     const dateIdx = header.indexOf("acq_date");
     const frpIdx = header.indexOf("frp");
@@ -85,7 +89,7 @@ export const fetchNasaFirms: Fetcher = async (
       return [];
     }
 
-    // Aggregate fire counts by year
+    // Aggregate raw fire detections into annual counts
     const yearCounts = new Map<string, number>();
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(",");

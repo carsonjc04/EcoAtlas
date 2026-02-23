@@ -1,0 +1,52 @@
+---
+description: Data pipeline, ingest scripts, sourceMap, and data file conventions
+globs: ecoatlas/scripts/**,ecoatlas/data/**,ecoatlas/src/data/**
+alwaysApply: false
+---
+
+# Data Pipeline
+
+## sourceMap (single source of truth)
+
+`src/data/sourceMap.ts` defines:
+- `SourceRef[]` - catalog of data sources (id, name, url, publisher, cadence)
+- `HotspotSourceMapping[]` - maps each hotspot to its metrics, each with metricKey, unit, description, source IDs, status, and dataPath
+
+Both the ingest pipeline and API routes reference sourceMap. Any new metric or data source must be registered here first.
+
+## Ingest Flow
+
+```
+scripts/ingest.ts (orchestrator)
+  -> reads sourceMap for hotspot-metric mappings
+  -> calls fetcher for each source (scripts/fetchers/*.ts)
+  -> writes data/series/{hotspotId}/{metricKey}.json
+```
+
+Run with: `npx tsx scripts/ingest.ts [--source <sourceId>]`
+
+## Fetcher Interface
+
+Each fetcher in `scripts/fetchers/` implements the `Fetcher` type from `scripts/fetchers/types.ts` and returns `SeriesPoint[]` (date + value pairs).
+
+Existing fetchers: Climate TRACE, EDGAR, NASA FIRMS, GFW, Reef, EM-DAT.
+Standalone scripts: `fetch_co2_mlo.js` (NOAA CO2), `import_iea_methane_series.js` (IEA methane).
+
+## Data File Shapes
+
+- **Series** (`data/series/{hotspotId}/{metricKey}.json`): `[{ date: string, value: number }, ...]` - chronological, finite values
+- **Snapshots** (`data/metricsSnapshots.ts`): `{ kind: "snapshot", unit, value, asOfYear, sourceId }` - fallback when no series exists
+
+## Validation
+
+All metric data conforms to `MetricValueSchema` (Zod) from `src/lib/schemas/metrics.ts`. Two discriminated kinds:
+- `kind: "series"` - has `unit`, `series[]`, `sourceId`
+- `kind: "snapshot"` - has `unit`, `value`, `asOfYear`, `sourceId`
+
+## Adding a New Data Source
+
+1. Add `SourceRef` entry in `sourceMap.ts`
+2. Add metric mapping to the relevant hotspot in `HotspotSourceMapping`
+3. Create fetcher in `scripts/fetchers/` implementing `Fetcher`
+4. Run ingest to generate series file
+5. Verify with `npx vitest` (sourceMap consistency + data integrity tests)

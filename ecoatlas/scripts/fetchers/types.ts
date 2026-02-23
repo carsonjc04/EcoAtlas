@@ -1,6 +1,15 @@
 /**
+ * Shared types for the data ingestion pipeline.
+ *
+ * Every fetcher module (climatetrace, edgar, gfw, etc.) imports these types
+ * to ensure a consistent interface. The ingest orchestrator builds a
+ * FetcherConfig for each metric and dispatches it to the matching Fetcher.
+ */
+
+/**
  * A single data point in a time series.
- * `date` is a string like "2022" (annual) or "2022-03-01" (monthly).
+ * `date` is either a year string ("2022") for annual data or an ISO date
+ * ("2022-03-01") for monthly/daily data. The API and frontend handle both.
  */
 export type SeriesPoint = {
   date: string;
@@ -8,7 +17,9 @@ export type SeriesPoint = {
 };
 
 /**
- * Configuration passed to each fetcher, derived from sourceMap + hotspots.json.
+ * Context passed to each fetcher, assembled by ingest.ts from sourceMap
+ * and hotspots.json. Fetchers use the lat/lng and bbox for spatial API
+ * queries, and metricKey to know which metric they're populating.
  */
 export type FetcherConfig = {
   hotspotId: string;
@@ -22,12 +33,15 @@ export type FetcherConfig = {
 };
 
 /**
- * Every fetcher module must export a function matching this signature.
- * It receives the config for one metric and returns the series data.
+ * The function signature every fetcher must implement. Receives config for
+ * one metric, returns the time-series data. Returning an empty array signals
+ * "no data available" and the ingest pipeline skips writing a file (the API
+ * will fall back to metricsSnapshots).
  */
 export type Fetcher = (config: FetcherConfig) => Promise<SeriesPoint[]>;
 
 /**
- * Registry entry mapping a source ID to its fetcher function.
+ * Registry mapping source IDs (from sourceMap.sources[].id) to their
+ * fetcher functions. Defined in ingest.ts.
  */
 export type FetcherRegistry = Record<string, Fetcher>;

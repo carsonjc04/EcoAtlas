@@ -1,14 +1,21 @@
 /**
  * EM-DAT / Germanwatch disaster data fetcher.
  *
- * EM-DAT (https://www.emdat.be/) requires free registration to download
- * the full database. This fetcher reads from a local CSV if available,
- * otherwise returns curated historical data for the impact hotspots.
+ * Provides historical disaster data for climate impact hotspots. Tries a
+ * local EM-DAT CSV export first (requires free registration at emdat.be),
+ * then falls back to curated historical data sourced from published reports.
  *
- * Covers:
- *   hs-013: St. Vincent & Grenadines (storms)
- *   hs-014: Manila, Philippines (typhoons)
- *   hs-016: Dhaka, Bangladesh (flooding)
+ * The fallback data is included directly in this file because:
+ *   - EM-DAT has no public API (download-only with registration)
+ *   - The values are well-documented in public disaster databases and
+ *     peer-reviewed reports
+ *   - Having inline fallbacks means the pipeline always produces data
+ *     for these hotspots, even without the CSV
+ *
+ * Coverage:
+ *   hs-013: St. Vincent & Grenadines — hurricane frequency and storm damage
+ *   hs-014: Manila, Philippines — typhoon counts, fatalities, climate risk rank
+ *   hs-016: Dhaka, Bangladesh — flood population impact, sea level rise, monsoon anomaly
  */
 
 import fs from "node:fs";
@@ -26,7 +33,6 @@ const EMDAT_CSV_PATH = path.join(
 // These are well-documented values from disaster databases and news reports.
 const FALLBACK_DATA: Record<string, Record<string, SeriesPoint[]>> = {
   "hs-013": {
-    // St. Vincent & Grenadines — hurricane/storm events per year
     hurricane_frequency: [
       { date: "2010", value: 1 },
       { date: "2011", value: 0 },
@@ -54,7 +60,6 @@ const FALLBACK_DATA: Record<string, Record<string, SeriesPoint[]>> = {
     ],
   },
   "hs-014": {
-    // Manila, Philippines — typhoon counts
     typhoon_count_annual: [
       { date: "2010", value: 9 },
       { date: "2011", value: 7 },
@@ -98,7 +103,6 @@ const FALLBACK_DATA: Record<string, Record<string, SeriesPoint[]>> = {
     ],
   },
   "hs-016": {
-    // Dhaka, Bangladesh — flood affected population (millions)
     flood_affected_population: [
       { date: "2010", value: 5.6 },
       { date: "2012", value: 3.2 },
@@ -134,8 +138,11 @@ const FALLBACK_DATA: Record<string, Record<string, SeriesPoint[]>> = {
 };
 
 /**
- * Parse a local EM-DAT CSV export (if available).
- * EM-DAT CSV columns: Year, ISO, Disaster Type, Total Deaths, Total Affected, etc.
+ * Parses a local EM-DAT CSV export to extract event counts or affected
+ * population by year for a given country and disaster type.
+ *
+ * EM-DAT CSVs don't have a stable column schema across export versions,
+ * so this does flexible header matching (e.g. "Year" or "Start Year").
  */
 function parseEmdatCsv(
   csvPath: string,
@@ -178,7 +185,6 @@ function parseEmdatCsv(
         yearCounts.set(year, (yearCounts.get(year) ?? 0) + val);
       }
     } else {
-      // Count events per year
       yearCounts.set(year, (yearCounts.get(year) ?? 0) + 1);
     }
   }
@@ -191,7 +197,7 @@ function parseEmdatCsv(
 export const fetchEmdat: Fetcher = async (
   config: FetcherConfig
 ): Promise<SeriesPoint[]> => {
-  // Try local EM-DAT CSV first
+  // Priority 1: parse the local EM-DAT CSV if downloaded
   if (fs.existsSync(EMDAT_CSV_PATH)) {
     console.log(`  [emdat] Found local CSV at ${EMDAT_CSV_PATH}`);
     const isoMap: Record<string, { iso: string; type: string }> = {
@@ -206,7 +212,7 @@ export const fetchEmdat: Fetcher = async (
     }
   }
 
-  // Fall back to curated historical data
+  // Priority 2: curated historical data from published reports
   const hotspotFallback = FALLBACK_DATA[config.hotspotId];
   if (!hotspotFallback) {
     console.log(

@@ -1,3 +1,20 @@
+/**
+ * sourceMap — the single source of truth linking hotspots, metrics, and data sources.
+ *
+ * This file is read by:
+ *   - scripts/ingest.ts to know which fetcher to call for each metric
+ *   - app/api/hotspots/[id]/route.ts to resolve metrics for API responses
+ *   - __tests__/sourcemap-consistency.test.ts to verify all ids, paths, and
+ *     cross-references are valid
+ *
+ * To add a new data source or metric:
+ *   1. Add a SourceRef to the `sources` array
+ *   2. Add a MetricMapping under the relevant hotspot in `hotspots`
+ *   3. Set status to "planned" until a fetcher is wired up, then "implemented"
+ *   4. Register the fetcher in scripts/ingest.ts registry
+ */
+
+/** A data provider (e.g. NOAA, Climate TRACE). Referenced by id in MetricMapping.sources. */
 export type SourceRef = {
   id: string;
   name: string;
@@ -8,6 +25,12 @@ export type SourceRef = {
   notes?: string;
 };
 
+/**
+ * Maps one metric to its data sources. The `sources` array lists source ids
+ * in priority order — the ingest pipeline tries the first source that has a
+ * registered fetcher. `dataPath` is the expected output location for the
+ * ingested series file.
+ */
 export type MetricMapping = {
   metricKey: string;
   unit?: string;
@@ -17,6 +40,11 @@ export type MetricMapping = {
   dataPath?: string;
 };
 
+/**
+ * Ties a hotspot to its metrics and categorisation metadata.
+ * `driverCategory` and `impactCategory` control grouping in the UI and
+ * determine which color palette the globe uses for rendering.
+ */
 export type HotspotSourceMapping = {
   hotspotId: string;
   hotspotName: string;

@@ -1,23 +1,28 @@
 /**
- * AIMS / NOAA Coral Reef Watch fetcher.
+ * Coral reef data fetcher — NOAA Coral Reef Watch + AIMS monitoring.
  *
- * Pulls coral bleaching and sea surface temperature data for the
- * Great Barrier Reef hotspot (hs-002).
+ * Pulls Degree Heating Weeks (DHW) data from NOAA's Coral Reef Watch
+ * virtual station files for the Great Barrier Reef. DHW is the standard
+ * metric for coral bleaching stress — values above 4 typically trigger
+ * significant bleaching, and above 8 indicate severe mortality risk.
  *
- * NOAA Coral Reef Watch: https://coralreefwatch.noaa.gov/
- * AIMS: https://www.aims.gov.au/
+ * Falls back to a curated list of known mass bleaching events if the
+ * NOAA endpoint is unavailable. These are widely documented in AIMS
+ * monitoring reports and peer-reviewed literature.
  *
- * Uses the NOAA CRW virtual station data for the GBR region.
+ * Only supports hs-002 (Great Barrier Reef). Other coral hotspots
+ * would need additional virtual station IDs.
+ *
+ * Sources:
+ *   - NOAA CRW: https://coralreefwatch.noaa.gov/
+ *   - AIMS: https://www.aims.gov.au/
  */
 
 import type { Fetcher, FetcherConfig, SeriesPoint } from "./types";
 
-// NOAA Coral Reef Watch provides Degree Heating Weeks (DHW) data
-// via their data server. We use the annual max DHW for the GBR region.
 const CRW_BASE =
   "https://coralreefwatch.noaa.gov/product/vs/data";
 
-// GBR virtual station IDs from CRW
 const GBR_STATIONS = [
   "great_barrier_reef",
 ];
@@ -40,8 +45,6 @@ export const fetchReef: Fetcher = async (
     return [];
   }
 
-  // Try the NOAA CRW time series endpoint
-  // The CRW data server serves CSV files for virtual stations
   const url = `${CRW_BASE}/vs_main_${GBR_STATIONS[0]}.txt`;
 
   try {
@@ -53,13 +56,14 @@ export const fetchReef: Fetcher = async (
     const text = await response.text();
     const lines = text.split("\n");
 
-    // CRW virtual station files have a header section starting with #
-    // Data columns are typically: date, SST, SST_anomaly, DHW, etc.
+    // CRW virtual station files use # for comment headers and have
+    // whitespace/tab-delimited columns: date, SST, SST_anomaly, DHW, ...
     const dataLines = lines.filter(
       (l) => l.trim() && !l.startsWith("#") && !l.startsWith("date")
     );
 
-    // Aggregate max DHW by year (bleaching severity metric)
+    // Track the maximum DHW per year — this captures the peak bleaching
+    // stress each year, which is more meaningful than an average
     const yearMaxDhw = new Map<string, number>();
 
     for (const line of dataLines) {
@@ -68,7 +72,7 @@ export const fetchReef: Fetcher = async (
 
       const dateStr = parts[0];
       const year = dateStr?.substring(0, 4);
-      const dhw = parseFloat(parts[3]); // DHW is typically the 4th column
+      const dhw = parseFloat(parts[3]);
 
       if (!year || !Number.isFinite(dhw)) continue;
 
@@ -89,8 +93,8 @@ export const fetchReef: Fetcher = async (
   } catch (err) {
     console.error(`  [reef] CRW fetch failed: ${err}`);
 
-    // Fallback: return known historical bleaching data points
-    // These are well-documented mass bleaching years for the GBR
+    // Known mass bleaching events for the GBR, sourced from AIMS
+    // long-term monitoring reports. DHW values are approximate annual peaks.
     console.log(`  [reef] Using known historical bleaching events`);
     return [
       { date: "1998", value: 4.0 },
