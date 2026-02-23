@@ -1,18 +1,24 @@
 /**
- * Global Forest Watch fetcher.
+ * Global Forest Watch fetcher — annual tree cover loss by country.
  *
- * Uses the GFW API to get tree cover loss data for deforestation hotspots.
+ * Uses the GFW data API to query the UMD tree cover loss dataset, which
+ * combines Landsat imagery with the Hansen Global Forest Change data.
+ * Returns annual tree cover loss in thousands of hectares.
  *
- * API docs: https://www.globalforestwatch.org/
- * Data API: https://data-api.globalforestwatch.org/
+ * Also aliased for INPE PRODES in the fetcher registry because both
+ * track deforestation in the same regions and the GFW API covers Brazil.
  *
- * Returns annual tree cover loss in hectares for a geographic area.
+ * Coverage:
+ *   hs-001: Brazil (Amazon/Mato Grosso) — threshold 30% canopy density
+ *   hs-007: Indonesia (Kalimantan) — threshold 30% canopy density
+ *
+ * API: https://data-api.globalforestwatch.org/
+ * The SQL endpoint allows filtering by ISO country code and minimum
+ * canopy density threshold (to exclude sparse/scrub vegetation).
  */
 
 import type { Fetcher, FetcherConfig, SeriesPoint } from "./types";
 
-// GFW uses ISO country codes or GeoJSON for spatial queries.
-// For simplicity, we use country-level data filtered by threshold.
 const HOTSPOT_CONFIG: Record<
   string,
   { iso: string; region?: string; threshold: number }
@@ -40,8 +46,9 @@ export const fetchGfw: Fetcher = async (
     return [];
   }
 
-  // Use the GFW dataset endpoint for tree cover loss by country
-  // This endpoint provides annual tree cover loss data
+  // SQL query against the GFW dataset endpoint. Groups by year, sums area,
+  // and filters to pixels with >= threshold % canopy density in the year 2000
+  // baseline (standard practice to exclude non-forest land).
   const url = `${GFW_API}/dataset/umd_tree_cover_loss/v1.11/query/json?sql=SELECT umd_tree_cover_loss__year, SUM(area__ha) as umd_tree_cover_loss__ha FROM data WHERE iso = '${mapping.iso}' AND umd_tree_cover_density_2000__threshold >= ${mapping.threshold} GROUP BY umd_tree_cover_loss__year ORDER BY umd_tree_cover_loss__year`;
 
   try {
@@ -70,7 +77,7 @@ export const fetchGfw: Fetcher = async (
 
       series.push({
         date: String(year),
-        // Convert hectares to thousands of hectares for readability
+        // Convert to thousands of hectares for readability in charts
         value: Number((area / 1000).toFixed(1)),
       });
     }

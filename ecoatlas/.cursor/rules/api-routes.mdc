@@ -1,0 +1,41 @@
+---
+description: API route conventions, static generation, and response schemas
+globs: ecoatlas/app/api/**
+alwaysApply: false
+---
+
+# API Routes
+
+All API routes serve hotspot data and are statically generated at build time.
+
+## Conventions
+
+- Use `export const dynamic = "force-static"` on every route
+- Implement `generateStaticParams` reading from `data/hotspots.json`
+- Validate responses with Zod schemas
+- Return 404 as `NextResponse.json({ error: "..." }, { status: 404 })` for invalid IDs
+
+## List Route (`app/api/hotspots/route.ts`)
+
+- **GET** returns the full hotspot list from `data/hotspots.json`
+- Validated against Zod `listSchema`
+- Response fields: `id`, `name`, `lat`, `lng`, `severity`, `topic`, `type`
+
+## Detail Route (`app/api/hotspots/[id]/route.ts`)
+
+- **GET** assembles a composite response:
+  1. Base hotspot from list (lat, lng, severity, etc.)
+  2. Story/sources from `data/hotspotDetails/{id}.json`
+  3. Metrics built from sourceMap: loads `data/series/{id}/{metricKey}.json` if available, falls back to `metricsSnapshots`
+- Response includes: `story`, `sources`, `series`, `metrics`
+
+## Data Resolution Order
+
+For each metric mapped in sourceMap:
+1. Try loading series file at `data/series/{hotspotId}/{metricKey}.json`
+2. If no series file, check `metricsSnapshots` for a snapshot value
+3. Both conform to `MetricValueSchema` (kind: "series" | "snapshot")
+
+## Adding a New Route
+
+Follow the same pattern: force-static, generateStaticParams, Zod validation, JSON responses. Keep routes thin -- data assembly logic can reference sourceMap and existing data files.

@@ -1,14 +1,21 @@
 /**
- * EDGAR v8.0 fetcher.
+ * EDGAR v8.0 fetcher — gridded emissions from the JRC global inventory.
  *
- * Wraps the existing Python script (scripts/edgar/aggregate_bbox.py) to
- * aggregate gridded CH4 emissions within a bounding box for each hotspot.
+ * EDGAR (Emissions Database for Global Atmospheric Research) provides
+ * gridded NetCDF files of greenhouse gas emissions at 0.1° × 0.1° resolution.
+ * This fetcher aggregates CH4 emissions within a bounding box for each hotspot
+ * by shelling out to a Python script that uses xarray and netCDF4.
  *
- * Requires: Python 3 with xarray, netCDF4, numpy installed.
- * Requires: NetCDF files in data/raw/edgar/TOTALS_emi_nc/
+ * The two-language approach (TS orchestrator + Python aggregation) exists
+ * because the NetCDF ecosystem is mature in Python but not in Node.js.
  *
- * If the raw NetCDF files are not present, this fetcher returns an empty array
- * (graceful skip).
+ * Prerequisites:
+ *   - Python 3 with xarray, netCDF4, numpy
+ *   - NetCDF files downloaded to data/raw/edgar/TOTALS_emi_nc/
+ *   - Download from https://edgar.jrc.ec.europa.eu/
+ *
+ * If the raw data isn't present, this fetcher returns [] (graceful skip)
+ * and the API falls back to metricsSnapshots.
  */
 
 import { execSync } from "node:child_process";
@@ -17,7 +24,11 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import type { Fetcher, FetcherConfig, SeriesPoint } from "./types";
 
-// Bounding boxes for EDGAR driver hotspots (wider than default for regional coverage)
+/**
+ * Wider bounding boxes than the default ±2° because EDGAR emissions are
+ * spread across industrial regions, not concentrated at a single point.
+ * These are tuned to capture the major emission sources for each hotspot.
+ */
 const HOTSPOT_BBOX: Record<string, [number, number, number, number]> = {
   "hs-006": [47, 23, 52, 28], // Ghawar, Saudi Arabia
   "hs-008": [110, 35, 115, 40], // Shanxi, China
@@ -33,7 +44,6 @@ const PYTHON_SCRIPT = path.join(process.cwd(), "scripts", "edgar", "aggregate_bb
 export const fetchEdgar: Fetcher = async (
   config: FetcherConfig
 ): Promise<SeriesPoint[]> => {
-  // Check if raw data exists
   if (!fs.existsSync(NC_DIR)) {
     console.log(
       `  [edgar] NetCDF directory not found at ${NC_DIR}, skipping. Download from https://edgar.jrc.ec.europa.eu/`
@@ -52,7 +62,6 @@ export const fetchEdgar: Fetcher = async (
     return [];
   }
 
-  // Find all NetCDF files
   const files = fs
     .readdirSync(NC_DIR)
     .filter((f) => f.endsWith(".nc"))
@@ -63,7 +72,8 @@ export const fetchEdgar: Fetcher = async (
     return [];
   }
 
-  // Write output to a temp file
+  // Write Python output to a temp file, then read it back into TS.
+  // This avoids stdout parsing issues with large JSON payloads.
   const tmpOutput = path.join(
     process.cwd(),
     "data",
@@ -84,18 +94,14 @@ export const fetchEdgar: Fetcher = async (
 
     execSync(cmd, { stdio: "pipe", timeout: 120_000 });
 
-    // Read and return the output
     const raw = await fsp.readFile(tmpOutput, "utf-8");
     const series: SeriesPoint[] = JSON.parse(raw);
 
-    // Clean up temp file
     fs.unlinkSync(tmpOutput);
 
-    // Convert from kg/m²/s (EDGAR units) to more readable units if needed
     return series.sort((a, b) => Number(a.date) - Number(b.date));
   } catch (err) {
     console.error(`  [edgar] Python aggregation failed: ${err}`);
-    // Clean up temp file if it exists
     if (fs.existsSync(tmpOutput)) {
       fs.unlinkSync(tmpOutput);
     }

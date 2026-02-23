@@ -1,10 +1,25 @@
+/**
+ * GET /api/hotspots — Hotspot list endpoint.
+ *
+ * Returns a lightweight JSON array of all 16 climate hotspots with position,
+ * severity, and type. This is the first request GlobeView makes on load to
+ * populate globe points, rings, and labels.
+ *
+ * Statically generated at build time (force-static) so it ships as a plain
+ * JSON file on the CDN. Zod validates the data file at build time to catch
+ * schema drift between hotspots.json and the frontend expectations.
+ */
+
 import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
+// Pre-rendered at build time — no server-side request handling at runtime
 export const dynamic = "force-static";
 
+// Validates each hotspot entry. "type" discriminates between emission sources
+// (drivers) and climate consequences (impacts), which controls globe coloring.
 const listItemSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -26,7 +41,6 @@ const readHotspotsList = async (): Promise<HotspotListItem[]> => {
   return listSchema.parse(parsed);
 };
 
-// Returns a lightweight list for the globe points.
 export async function GET() {
   const list = await readHotspotsList();
 

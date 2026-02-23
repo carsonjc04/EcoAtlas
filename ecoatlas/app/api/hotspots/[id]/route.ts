@@ -1,3 +1,20 @@
+/**
+ * GET /api/hotspots/[id] — Single hotspot detail endpoint.
+ *
+ * Assembles a composite response by merging three data layers:
+ *   1. Base fields (lat, lng, severity, type) from hotspots.json
+ *   2. Narrative content (story, sources) from hotspotDetails/{id}.json
+ *   3. Metric data resolved from sourceMap — prefers time-series files
+ *      in data/series/, falls back to point-in-time snapshots
+ *
+ * Statically generated at build time via generateStaticParams so each
+ * hotspot detail page is a pre-built JSON file on the CDN.
+ *
+ * The story field uses a fallback chain (story → title/summary → defaults)
+ * because early hotspot detail files used a flat format before the structured
+ * story schema was introduced.
+ */
+
 import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -7,6 +24,10 @@ import { sourceMap } from "../../../../src/data/sourceMap";
 
 export const dynamic = "force-static";
 
+/**
+ * Tells Next.js which [id] values to pre-render. Every id in hotspots.json
+ * gets a static page — no fallback rendering at runtime.
+ */
 export async function generateStaticParams() {
   const raw = await readFile(
     path.join(process.cwd(), "data", "hotspots.json"),
@@ -16,6 +37,7 @@ export async function generateStaticParams() {
   return hotspots.map((h) => ({ id: h.id }));
 }
 
+// Same schema as the list route — shared shape for the base hotspot fields
 const listItemSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -27,6 +49,7 @@ const listItemSchema = z.object({
 });
 const listSchema = z.array(listItemSchema);
 
+// Structured narrative for the sidebar Story tab
 const storySchema = z.object({
   headline: z.string(),
   summary: z.string(),
@@ -36,6 +59,8 @@ const storySchema = z.object({
   outlook: z.string().optional(),
 });
 
+// Detail files may contain legacy fields (title, summary) from before the
+// story schema was standardised, so those are optional here
 const detailSchema = z.object({
   id: z.string(),
   title: z.string().optional(),
@@ -50,6 +75,7 @@ const detailSchema = z.object({
   ),
 });
 
+// Shape for ingested time-series data files (date strings + numeric values)
 const seriesPointSchema = z.array(
   z.object({
     date: z.string(),
@@ -66,6 +92,14 @@ const detailDir = path.join(dataDir, "hotspotDetails");
 const seriesDir = path.join(dataDir, "series");
 const listPath = path.join(dataDir, "hotspots.json");
 
+/**
+ * Discriminated union for metric values. A metric is either:
+ *   - "series": chronological data points (from data/series/ files)
+ *   - "snapshot": a single value at a point in time (from metricsSnapshots.ts)
+ *
+ * The frontend renders series with Sparkline charts and snapshots as
+ * static MetricCards.
+ */
 const metricValueSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("series"),
@@ -82,6 +116,8 @@ const metricValueSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
+// Pre-validate and index snapshots at module load so lookups during
+// request handling are a simple Map.get()
 const snapshotLookup = new Map(
   Object.entries(metricsSnapshots).map(([key, value]) => [
     key,
@@ -102,7 +138,6 @@ const readHotspotDetail = async (id: string): Promise<HotspotDetail> => {
   return detailSchema.parse(parsed);
 };
 
-// Returns full details for a single hotspot.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -147,6 +182,9 @@ export async function GET(
     );
   }
 
+  // --- Metric resolution ---
+  // Walk the sourceMap to find every metric mapped to this hotspot,
+  // then resolve each one: try a series file first, fall back to a snapshot.
   let metrics: Record<string, unknown> | undefined = undefined;
   const mapping = sourceMap.hotspots.find((item) => item.hotspotId === id);
 
@@ -154,7 +192,7 @@ export async function GET(
     metrics = {};
 
     for (const metric of mapping.metrics) {
-      // Try reading a series JSON file from data/series/{hotspotId}/{metricKey}.json
+      // Priority 1: ingested time-series file (produced by scripts/ingest.ts)
       const seriesPath = path.join(seriesDir, id, `${metric.metricKey}.json`);
       try {
         const raw = await readFile(seriesPath, "utf-8");
@@ -167,21 +205,26 @@ export async function GET(
         });
         continue;
       } catch {
-        // No series file found — fall through to snapshot lookup
+        // No series file — fall through to snapshot
       }
 
-      // Fall back to snapshot values
+      // Priority 2: static snapshot value (manually curated in metricsSnapshots.ts)
       const snapshot = snapshotLookup.get(metric.metricKey);
       if (snapshot) {
         metrics[metric.metricKey] = metricValueSchema.parse(snapshot);
       }
     }
 
+    // Don't attach an empty metrics object — let the frontend know there's no data
     if (Object.keys(metrics).length === 0) {
       metrics = undefined;
     }
   }
 
+  // --- Story fallback chain ---
+  // Newer detail files have a full `story` object. Older ones only had flat
+  // `title` and `summary` fields. This normalises both formats into the
+  // structured shape the sidebar expects.
   const fallbackStory: HotspotStory = {
     headline: detail.story?.headline ?? detail.title ?? "Story unavailable",
     summary: detail.story?.summary ?? detail.summary ?? "Summary unavailable.",

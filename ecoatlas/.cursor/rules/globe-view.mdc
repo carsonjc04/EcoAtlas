@@ -1,0 +1,49 @@
+---
+description: GlobeView component structure, constants, and pitfalls
+globs: ecoatlas/app/components/GlobeView.tsx
+alwaysApply: false
+---
+
+# GlobeView Component
+
+Large (~2300 lines) client-only component. Loaded via `dynamic(..., { ssr: false })`.
+
+## File Structure (top to bottom)
+
+1. **Imports and types**
+2. **CLIMATE_CLOCK_CONFIG** - IPCC AR6 scientific constants (carbon budget, emissions rate, warming). These are scientific reference points with a 2024-01-01 reference date. Do NOT confuse with the UI "current year".
+3. **Helper functions** - `interpolateColor`, `getHotspotColor`, `getSeverityLabel`, etc.
+4. **TIME_DIAL_MILESTONES** - Timeline markers including the "Now" marker
+5. **TimeDial sub-component** - The timeline slider UI (1990-2050)
+6. **GlobeView component** - Main component with state, effects, and render
+
+## Critical: "Now" Year
+
+The current year for the timeline must match the real-world year. It appears in three places:
+
+- `TIME_DIAL_MILESTONES`: `{ year: 2026, label: "Now" }`
+- `isCurrent` check: `milestone.year === 2026`
+- Initial state: `useState(2026)` for both `currentYear` and `targetYear`
+
+When updating the year, change all three locations.
+
+## Hotspot Rendering
+
+- Points + animated rings + HTML labels on the globe
+- **Drivers**: crimson/red color palette, size scales with severity and year
+- **Impacts**: blue color palette, severity-based sizing
+- Color and size interpolate across the 1990-2050 range via the Climate Time Machine
+
+## Climate Visuals
+
+Atmosphere glow, fog, and sea-level sphere are Three.js effects driven by `currentYear`. These are added to the globe's Three.js scene via `useEffect`.
+
+## Sidebar Integration
+
+- Clicking a hotspot fetches `/api/hotspots/:id` for detail data
+- Opens the `Sidebar` component with tabs: Story, Data, Trends, Layers, Sources
+- `MetricCard` and `Sparkline` render metric data in the Data tab
+
+## State Summary
+
+Key state variables: `currentYear`, `targetYear`, `isDraggingDial`, `selectedHotspot`, `hotspotDetail`, `searchQuery`, `isMenuOpen`, `showClimateClock`.

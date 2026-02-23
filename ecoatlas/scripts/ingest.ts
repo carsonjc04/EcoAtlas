@@ -1,13 +1,17 @@
 /**
- * Ingestion orchestrator.
+ * Ingestion orchestrator — the main data pipeline entry point.
  *
- * Reads sourceMap to discover all hotspot metrics, dispatches to the
- * appropriate fetcher for each source, and writes the result to
- * data/series/{hotspotId}/{metricKey}.json.
+ * Walks every hotspot in sourceMap, finds the first registered fetcher for
+ * each metric's source list, calls it, and writes the resulting time-series
+ * to data/series/{hotspotId}/{metricKey}.json.
+ *
+ * The output files are what the API detail route reads at build time to
+ * populate the "series" kind of MetricValue. If a fetcher fails or returns
+ * no data, the metric silently falls back to metricsSnapshots in the API.
  *
  * Usage:
- *   tsx scripts/ingest.ts                   # run all fetchers
- *   tsx scripts/ingest.ts --source climate_trace   # run one source only
+ *   npx tsx scripts/ingest.ts                        # run all fetchers
+ *   npx tsx scripts/ingest.ts --source climate_trace  # run one source only
  */
 
 import fs from "node:fs";
@@ -16,7 +20,6 @@ import path from "node:path";
 import { sourceMap } from "../src/data/sourceMap";
 import type { FetcherConfig, FetcherRegistry, SeriesPoint } from "./fetchers/types";
 
-// --- Fetcher imports ---
 import { fetchClimatTrace } from "./fetchers/climatetrace";
 import { fetchEdgar } from "./fetchers/edgar";
 import { fetchNasaFirms } from "./fetchers/nasa-firms";
@@ -24,14 +27,20 @@ import { fetchGfw } from "./fetchers/gfw";
 import { fetchReef } from "./fetchers/reef";
 import { fetchEmdat } from "./fetchers/emdat";
 
-// Map source IDs to their fetcher functions.
-// When a metric lists multiple sources, we try the first one that has a fetcher.
+/**
+ * Maps source IDs (from sourceMap) to fetcher functions.
+ *
+ * A metric in sourceMap can list multiple source IDs (e.g. ["climate_trace", "edgar_jrc"]).
+ * The pipeline tries them in order and uses the first one present in this registry.
+ * Sources that share a fetcher (e.g. inpe_prodes → fetchGfw) are aliased here
+ * because they use the same underlying API with compatible spatial queries.
+ */
 const registry: FetcherRegistry = {
   climate_trace: fetchClimatTrace,
   edgar_jrc: fetchEdgar,
   nasa_firms: fetchNasaFirms,
   "src-gfw-01": fetchGfw,
-  inpe_prodes: fetchGfw, // same spatial deforestation approach
+  inpe_prodes: fetchGfw,
   aims_reef_monitoring: fetchReef,
   noaa_coral_reef_watch: fetchReef,
   emdat_cred: fetchEmdat,
@@ -39,7 +48,6 @@ const registry: FetcherRegistry = {
   pagasa_typhoon: fetchEmdat,
 };
 
-// Load hotspots.json for lat/lng lookup
 type HotspotEntry = {
   id: string;
   name: string;
@@ -53,7 +61,11 @@ type HotspotEntry = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const SERIES_DIR = path.join(DATA_DIR, "series");
 
-/** Default bounding box: 2 degrees around the hotspot center */
+/**
+ * Creates a ~4° × 4° bounding box centered on the hotspot for spatial
+ * API queries (EDGAR, FIRMS). Some fetchers override this with their own
+ * wider boxes for regional coverage.
+ */
 function defaultBbox(lat: number, lng: number): [number, number, number, number] {
   return [lng - 2, lat - 2, lng + 2, lat + 2];
 }

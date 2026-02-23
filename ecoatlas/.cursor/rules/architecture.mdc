@@ -1,0 +1,70 @@
+---
+description: EcoAtlas project architecture, conventions, and key constants
+alwaysApply: true
+---
+
+# EcoAtlas Architecture
+
+## Tech Stack
+
+- Next.js 15 App Router with Turbopack
+- TypeScript (strict mode), path alias `@/*` resolves to project root (`ecoatlas/`)
+- react-globe.gl + Three.js for 3D globe (client-only, no SSR)
+- Tailwind CSS v4, Radix UI primitives, class-variance-authority
+- Zod for runtime validation (API responses, metric schemas)
+- Vitest for testing (`__tests__/`)
+- PostHog analytics (optional, env-gated)
+
+## Directory Structure
+
+```
+ecoatlas/
+  app/                    # Next.js App Router
+    api/hotspots/         # Force-static API routes (list + detail)
+    components/           # GlobeView.tsx, AnalyticsProvider.tsx
+    globe/page.tsx        # Globe route
+    page.tsx              # Home (renders GlobeView)
+  components/             # Sidebar, MetricCard, Sparkline, ui/ primitives
+  src/data/               # sourceMap.ts (metric catalog), schemas
+  src/lib/schemas/        # Zod MetricValueSchema (series | snapshot)
+  data/                   # Static data files
+    hotspots.json         # 16 hotspots (id, name, lat, lng, severity, type)
+    hotspotDetails/       # Per-hotspot story/sources JSON (hs-001..hs-016)
+    series/               # Time series JSON per hotspot/metric
+    metricsSnapshots.ts   # Fallback snapshot metrics
+  scripts/                # Data ingest pipeline (fetchers, ingest.ts)
+  __tests__/              # API, data integrity, schema, sourceMap tests
+```
+
+## Data Flow
+
+```
+scripts/fetchers -> data/series/ & data/hotspotDetails/
+                          |
+              app/api/hotspots/ (static routes, Zod-validated)
+                          |
+              GlobeView.tsx (client fetch + render)
+```
+
+## Key Conventions
+
+- **Metrics** have two shapes: `kind: "series"` (time series array) or `kind: "snapshot"` (single value). Both validated by `MetricValueSchema`.
+- **sourceMap** (`src/data/sourceMap.ts`) is the single source of truth for which hotspot has which metrics and data sources.
+- **API routes** are force-static with `generateStaticParams` from `hotspots.json`.
+- **Hotspots**: 16 total (8 drivers, 8 impacts), ids `hs-001`..`hs-016`, plus `hs-000` for global atmosphere (CO2). Severity 1-10. Type is `"driver"` or `"impact"`.
+- **Driver** color = crimson/red. **Impact** color = blue. Accent green = `#4ade80`.
+
+## Important Constants
+
+- **Current year**: 2026 (used for timeline "Now" marker and initial state)
+- **Climate Time Machine range**: 1990-2050
+- **Climate Clock** (IPCC AR6 scientific reference, NOT the UI year): budget 250 Gt CO2, rate 40.2 Gt/yr, warming +1.29C, reference date 2024-01-01
+- **Sidebar width**: 420px
+
+## Testing
+
+Run `npx vitest` from `ecoatlas/`. Tests cover:
+- API response shapes and status codes
+- Data file integrity (chronological, finite values, required fields)
+- Zod schema contracts for metrics
+- sourceMap consistency (all ids, paths, and sources cross-referenced)

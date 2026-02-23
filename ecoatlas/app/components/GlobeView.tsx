@@ -8,6 +8,7 @@ import InfoTable from "@/components/InfoTable";
 import Sidebar from "@/components/Sidebar";
 import { sourceMap } from "../../src/data/sourceMap";
 import { track } from "../../lib/analytics";
+import * as THREE from "three";
 
 type HotspotListItem = {
   id: string;
@@ -228,7 +229,7 @@ const TIME_DIAL_MILESTONES = [
   { year: 1990, label: "1990" },
   { year: 2000, label: "2000" },
   { year: 2015, label: "Paris" },
-  { year: 2024, label: "Now" },
+  { year: 2026, label: "Now" },
   { year: 2030, label: "2030" },
   { year: 2050, label: "2050" },
 ];
@@ -339,7 +340,7 @@ function TimeDial({
         {TIME_DIAL_MILESTONES.map((milestone) => {
           const pos = ((milestone.year - minYear) / (maxYear - minYear)) * 100;
           const isActive = (isDragging ? targetYear : currentYear) >= milestone.year;
-          const isCurrent = milestone.year === 2024;
+          const isCurrent = milestone.year === 2026;
 
           return (
             <div
@@ -468,14 +469,19 @@ export default function GlobeView() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Climate Time Machine state
-  const [currentYear, setCurrentYear] = useState(2024);
-  const [targetYear, setTargetYear] = useState(2024);
+  const [currentYear, setCurrentYear] = useState(2026);
+  const [targetYear, setTargetYear] = useState(2026);
   const [isDraggingDial, setIsDraggingDial] = useState(false);
   
   const hasTrackedGlobeLoad = useRef(false);
   const lastRequestedId = useRef<string | null>(null);
   const globeRef = useRef<GlobeRef>(undefined);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Climate visual effect refs
+  const atmosphereRef = useRef<THREE.Mesh | null>(null);
+  const seaLevelRef = useRef<THREE.Mesh | null>(null);
+  const fogRef = useRef<THREE.FogExp2 | null>(null);
 
   const climateClock = useClimateClock();
 
@@ -597,6 +603,103 @@ export default function GlobeView() {
       hasTrackedGlobeLoad.current = true;
     }
   }, []);
+
+  // Initialize climate visual effect layers (atmosphere, fog, sea level)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const globe = globeRef.current;
+      if (!globe || !globe.scene) return;
+
+      const scene = globe.scene();
+      if (!scene) return;
+
+      // Layer 1: Atmosphere tint sphere
+      const atmosGeometry = new THREE.SphereGeometry(101, 64, 64);
+      const atmosMaterial = new THREE.MeshBasicMaterial({
+        color: new THREE.Color("#ff6b35"),
+        transparent: true,
+        opacity: 0,
+        side: THREE.FrontSide,
+        depthWrite: false,
+      });
+      const atmosMesh = new THREE.Mesh(atmosGeometry, atmosMaterial);
+      atmosMesh.renderOrder = 1;
+      scene.add(atmosMesh);
+      atmosphereRef.current = atmosMesh;
+
+      // Layer 2: Scene fog
+      const fog = new THREE.FogExp2("#1a1008", 0);
+      scene.fog = fog;
+      fogRef.current = fog;
+
+      // Layer 3: Sea level rise sphere
+      const seaGeometry = new THREE.SphereGeometry(100, 64, 64);
+      const seaMaterial = new THREE.MeshBasicMaterial({
+        color: new THREE.Color("#1a4a7a"),
+        transparent: true,
+        opacity: 0,
+        side: THREE.FrontSide,
+        depthWrite: false,
+      });
+      const seaMesh = new THREE.Mesh(seaGeometry, seaMaterial);
+      seaMesh.renderOrder = 0;
+      scene.add(seaMesh);
+      seaLevelRef.current = seaMesh;
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      const globe = globeRef.current;
+      if (!globe || !globe.scene) return;
+      const scene = globe.scene();
+
+      if (atmosphereRef.current) {
+        scene.remove(atmosphereRef.current);
+        atmosphereRef.current.geometry.dispose();
+        (atmosphereRef.current.material as THREE.Material).dispose();
+        atmosphereRef.current = null;
+      }
+      if (seaLevelRef.current) {
+        scene.remove(seaLevelRef.current);
+        seaLevelRef.current.geometry.dispose();
+        (seaLevelRef.current.material as THREE.Material).dispose();
+        seaLevelRef.current = null;
+      }
+      if (fogRef.current) {
+        scene.fog = null;
+        fogRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update visual effects based on current year
+  useEffect(() => {
+    const progress = Math.max(0, Math.min(1, (currentYear - 1990) / (2050 - 1990)));
+
+    // Atmosphere: invisible at 1990, warm orange at 2050
+    if (atmosphereRef.current) {
+      const mat = atmosphereRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = progress * 0.3;
+      // Shift from faint yellow-orange to deep orange-red
+      const r = 1.0;
+      const g = 0.42 + (1 - progress) * 0.35;
+      const b = 0.21 - progress * 0.15;
+      mat.color.setRGB(r, g, Math.max(0, b));
+    }
+
+    // Fog: none at 1990, heavy murk at 2050
+    if (fogRef.current) {
+      fogRef.current.density = progress * 0.001;
+    }
+
+    // Sea level: invisible at 1990, translucent blue overlay at 2050
+    if (seaLevelRef.current) {
+      const mat = seaLevelRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = progress * 0.18;
+      const scale = 1.0 + progress * 0.0015;
+      seaLevelRef.current.scale.setScalar(scale);
+    }
+  }, [currentYear]);
 
 
   const severityLabel = (severity: number) => {
