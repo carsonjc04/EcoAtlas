@@ -58,7 +58,7 @@ scripts/fetchers -> data/series/ & data/hotspotDetails/
 
 - **Current year**: 2026 (used for timeline "Now" marker and initial state)
 - **Climate Time Machine range**: 1990-2050
-- **Climate Clock** (IPCC AR6 scientific reference, NOT the UI year): budget 250 Gt CO2, rate 40.2 Gt/yr, warming +1.29C, reference date 2024-01-01
+- **Climate Clock**: fetched live from `api.climateclock.world/v2/clock.json` (deadline timestamp). Falls back to a hardcoded deadline if offline. Static display values (warming +1.35C, rate 42.0 Gt/yr) are local constants since the API doesn't provide them.
 - **Sidebar width**: 420px
 
 ## Testing
