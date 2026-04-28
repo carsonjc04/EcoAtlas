@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## Tech Stack
 
-- Next.js 15 App Router with Turbopack
+- Next.js 16 App Router with Turbopack
 - TypeScript (strict mode), path alias `@/*` resolves to project root (`ecoatlas/`)
 - react-globe.gl + Three.js for 3D globe (client-only, no SSR)
 - Tailwind CSS v4, Radix UI primitives, class-variance-authority
