@@ -126,7 +126,7 @@ Color blending uses linear interpolation between hex values converted to RGB. Ri
 
 The header displays a live countdown to carbon budget exhaustion based on:
 
-- **Carbon budget:** 250 Gt CO₂ remaining (IPCC AR6, as of Jan 2024)
+- **Carbon budget:** 250 Gt CO₂ remaining (IPCC AR6, as of Jan 2026)
 - **Emissions rate:** 40.2 Gt CO₂/year
 - **Current warming:** +1.29°C above pre-industrial
 

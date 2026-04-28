@@ -73,49 +73,65 @@ const getLatest = (series: { date: string; value: number }[]) => {
   return series[series.length - 1];
 };
 
-// Climate Clock calculations based on IPCC data
-// Reference: https://climateclock.world/
-const CLIMATE_CLOCK_CONFIG = {
-  // Carbon budget remaining for 1.5°C (in Gt CO₂) - IPCC AR6 estimate as of Jan 2024
-  carbonBudgetStartGt: 250,
-  // Reference date for the budget
-  referenceDate: new Date("2024-01-01T00:00:00Z"),
-  // Global emissions rate (Gt CO₂/year)
-  emissionsRateGtPerYear: 40.2,
-  // Current warming above pre-industrial (°C)
-  currentWarming: 1.29,
+// Climate Clock — powered by the Climate Clock API (https://climateclock.world/)
+// The deadline is fetched live from the API so it stays current without manual
+// updates. Static display values (warming, emissions rate) are kept locally
+// because the API doesn't provide them.
+const CLIMATE_CLOCK_DISPLAY = {
+  emissionsRateGtPerYear: 42.0,
+  currentWarming: 1.35,
+  // Full IPCC AR6 budget from Jan 2020 — used as the progress bar denominator
+  totalBudgetGt: 400,
 };
+
+// Snapshot of the API deadline, used when the fetch fails (offline, blocked, etc.)
+const FALLBACK_DEADLINE = new Date("2029-07-22T16:00:00+00:00");
+
+const CLIMATE_CLOCK_API = "https://api.climateclock.world/v2/clock.json";
+const MS_PER_YEAR = 1000 * 60 * 60 * 24 * 365.25;
 
 function useClimateClock() {
   const [now, setNow] = useState(new Date());
+  const [deadline, setDeadline] = useState<Date>(FALLBACK_DEADLINE);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const { carbonBudgetStartGt, referenceDate, emissionsRateGtPerYear, currentWarming } =
-    CLIMATE_CLOCK_CONFIG;
+  useEffect(() => {
+    let cancelled = false;
+    fetch(CLIMATE_CLOCK_API)
+      .then((res) => {
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        return res.json();
+      })
+      .then((json) => {
+        if (cancelled) return;
+        const ts = json?.data?.modules?.carbon_deadline_1?.timestamp;
+        if (ts) setDeadline(new Date(ts));
+      })
+      .catch(() => {
+        // Keep the fallback deadline — clock still works offline
+      });
+    return () => { cancelled = true; };
+  }, []);
 
-  // Calculate elapsed time since reference date
-  const elapsedMs = now.getTime() - referenceDate.getTime();
-  const elapsedYears = elapsedMs / (1000 * 60 * 60 * 24 * 365.25);
+  const { emissionsRateGtPerYear, currentWarming } = CLIMATE_CLOCK_DISPLAY;
 
-  // Calculate remaining carbon budget
-  const emittedSinceReference = elapsedYears * emissionsRateGtPerYear;
-  const remainingBudgetGt = Math.max(0, carbonBudgetStartGt - emittedSinceReference);
+  const remainingMs = Math.max(0, deadline.getTime() - now.getTime());
+  const remainingYears = remainingMs / MS_PER_YEAR;
 
-  // Calculate remaining time
-  const remainingYears = remainingBudgetGt / emissionsRateGtPerYear;
+  const remainingBudgetGt = remainingYears * emissionsRateGtPerYear;
+
+  const totalSeconds = Math.floor(remainingMs / 1000);
   const years = Math.floor(remainingYears);
-  const days = Math.floor((remainingYears - years) * 365.25);
-  const hours = Math.floor(((remainingYears - years) * 365.25 - days) * 24);
-  const minutes = Math.floor((((remainingYears - years) * 365.25 - days) * 24 - hours) * 60);
-  const seconds = Math.floor(
-    (((((remainingYears - years) * 365.25 - days) * 24 - hours) * 60 - minutes) * 60)
-  );
+  const daysRemainder = remainingMs - years * MS_PER_YEAR;
+  const days = Math.floor(daysRemainder / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60));
+  const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+  const seconds = totalSeconds % 60;
 
-  // Urgency level (0-1, where 1 is most urgent)
   const urgency = Math.min(1, Math.max(0, 1 - remainingYears / 10));
 
   return {
@@ -2223,7 +2239,7 @@ export default function GlobeView() {
                 >
                   <div
                     style={{
-                      width: `${(climateClock.remainingBudgetGt / CLIMATE_CLOCK_CONFIG.carbonBudgetStartGt) * 100}%`,
+                      width: `${(climateClock.remainingBudgetGt / CLIMATE_CLOCK_DISPLAY.totalBudgetGt) * 100}%`,
                       height: "100%",
                       backgroundColor: "#ef4444",
                       borderRadius: 3,

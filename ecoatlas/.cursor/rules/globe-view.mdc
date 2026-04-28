@@ -11,7 +11,7 @@ Large (~2300 lines) client-only component. Loaded via `dynamic(..., { ssr: false
 ## File Structure (top to bottom)
 
 1. **Imports and types**
-2. **CLIMATE_CLOCK_CONFIG** - IPCC AR6 scientific constants (carbon budget, emissions rate, warming). These are scientific reference points with a 2024-01-01 reference date. Do NOT confuse with the UI "current year".
+2. **CLIMATE_CLOCK_DISPLAY** + **useClimateClock()** — the Climate Clock fetches its deadline from `api.climateclock.world/v2/clock.json` on mount, with a hardcoded fallback for offline use. Static display values (warming, emissions rate, total budget for progress bar) are local constants. Do NOT confuse with the UI "current year" on the timeline.
 3. **Helper functions** - `interpolateColor`, `getHotspotColor`, `getSeverityLabel`, etc.
 4. **TIME_DIAL_MILESTONES** - Timeline markers including the "Now" marker
 5. **TimeDial sub-component** - The timeline slider UI (1990-2050)
