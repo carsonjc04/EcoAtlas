@@ -13,7 +13,7 @@ alwaysApply: true
 - Tailwind CSS v4, Radix UI primitives, class-variance-authority
 - Zod for runtime validation (API responses, metric schemas)
 - Vitest for testing (`__tests__/`)
-- PostHog analytics (optional, env-gated)
+- Vercel Web Analytics for page views and custom interaction events
 
 ## Directory Structure
 

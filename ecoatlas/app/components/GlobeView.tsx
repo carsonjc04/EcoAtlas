@@ -3,11 +3,13 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MetricValue } from "../../src/lib/schemas/metrics";
+import ImpactTrajectoryChart from "@/components/ImpactTrajectoryChart";
 import MetricCard from "@/components/MetricCard";
 import InfoTable from "@/components/InfoTable";
 import Sidebar from "@/components/Sidebar";
 import { sourceMap } from "../../src/data/sourceMap";
-import { track } from "../../lib/analytics";
+import { buildImpactTrajectory } from "../../lib/impactTrajectory";
+import { toHotspotAnalyticsProps, track, trackHotspotEvent } from "../../lib/analytics";
 import * as THREE from "three";
 
 type HotspotListItem = {
@@ -35,6 +37,8 @@ type HotspotDetail = HotspotListItem & {
   series: { year: number; value: number }[];
   metrics?: Record<string, MetricValue>;
 };
+
+type SidebarTab = "story" | "data" | "trends" | "layers" | "sources";
 
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
@@ -71,6 +75,14 @@ const formatNumber = (value: number, unit?: string) => {
 const getLatest = (series: { date: string; value: number }[]) => {
   if (!series.length) return null;
   return series[series.length - 1];
+};
+
+const getDomain = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "unknown";
+  }
 };
 
 // Climate Clock — powered by the Climate Clock API (https://climateclock.world/)
@@ -473,9 +485,7 @@ export default function GlobeView() {
     useState<HotspotDetail | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isClimateClockOpen, setIsClimateClockOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"story" | "data" | "trends" | "layers" | "sources">(
-    "story"
-  );
+  const [activeTab, setActiveTab] = useState<SidebarTab>("story");
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [loadingHotspots, setLoadingHotspots] = useState(false);
   const [errorHotspots, setErrorHotspots] = useState<string | null>(null);
@@ -491,6 +501,7 @@ export default function GlobeView() {
   
   const hasTrackedGlobeLoad = useRef(false);
   const lastRequestedId = useRef<string | null>(null);
+  const timelineTrackTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const globeRef = useRef<GlobeRef>(undefined);
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -508,6 +519,36 @@ export default function GlobeView() {
       )
     : [];
 
+  const handlePanelOpen = useCallback(
+    (source: "globe" | "search" | "sidebar_toggle") => {
+      if (selectedHotspot) {
+        trackHotspotEvent("panel_opened", selectedHotspot, source);
+      }
+      setIsPanelOpen(true);
+    },
+    [selectedHotspot]
+  );
+
+  const handlePanelClose = useCallback(() => {
+    if (selectedHotspot) {
+      track("panel_closed", toHotspotAnalyticsProps(selectedHotspot));
+    }
+    setIsPanelOpen(false);
+  }, [selectedHotspot]);
+
+  const handleTabChange = useCallback(
+    (tab: SidebarTab) => {
+      if (selectedHotspot && tab !== activeTab) {
+        track("tab_changed", {
+          ...toHotspotAnalyticsProps(selectedHotspot),
+          tab,
+        });
+      }
+      setActiveTab(tab);
+    },
+    [activeTab, selectedHotspot]
+  );
+
   // Handle clicking on a search result
   const handleSearchSelect = useCallback(
     async (hotspot: HotspotListItem) => {
@@ -523,12 +564,20 @@ export default function GlobeView() {
       }
 
       // Fetch hotspot details and open sidebar
-      track("hotspot_clicked", { hotspotId: hotspot.id, source: "search" });
+      trackHotspotEvent("hotspot_selected", hotspot, "search");
+      track("search_result_selected", {
+        ...toHotspotAnalyticsProps(hotspot, "search"),
+        result_count: searchResults.length,
+      });
       lastRequestedId.current = hotspot.id;
       setLoadingDetail(true);
       try {
         const response = await fetch(`/api/hotspots/${hotspot.id}`);
         if (!response.ok) {
+          track("hotspot_detail_load_failed", {
+            hotspot_id: hotspot.id,
+            status: response.status,
+          });
           if (lastRequestedId.current === hotspot.id) {
             setLoadingDetail(false);
           }
@@ -540,14 +589,15 @@ export default function GlobeView() {
         setIsPanelOpen(true);
         setActiveTab("story");
         setLoadingDetail(false);
-        track("panel_opened", { hotspotId: hotspot.id, source: "search" });
+        trackHotspotEvent("panel_opened", hotspot, "search");
       } catch {
+        track("hotspot_detail_load_failed", { hotspot_id: hotspot.id });
         if (lastRequestedId.current === hotspot.id) {
           setLoadingDetail(false);
         }
       }
     },
-    []
+    [searchResults.length]
   );
 
   // Close search dropdown when clicking outside
@@ -584,6 +634,7 @@ export default function GlobeView() {
       try {
         const response = await fetch("/api/hotspots");
         if (!response.ok) {
+          track("hotspots_load_failed", { status: response.status });
           if (isMounted) {
             setErrorHotspots("Failed to load hotspots");
             setHotspots([]);
@@ -595,6 +646,7 @@ export default function GlobeView() {
           setHotspots(data);
         }
       } catch {
+        track("hotspots_load_failed");
         if (isMounted) {
           setErrorHotspots("Failed to load hotspots");
           setHotspots([]);
@@ -615,10 +667,10 @@ export default function GlobeView() {
   // Track globe load once per page view, regardless of fetch outcome.
   useEffect(() => {
     if (!hasTrackedGlobeLoad.current) {
-      track("globe_loaded");
+      track("globe_loaded", { hotspot_count: hotspots.length || undefined });
       hasTrackedGlobeLoad.current = true;
     }
-  }, []);
+  }, [hotspots.length]);
 
   // Initialize climate visual effect layers (atmosphere, fog, sea level)
   useEffect(() => {
@@ -717,6 +769,25 @@ export default function GlobeView() {
     }
   }, [currentYear]);
 
+  const handleTimelineYearChange = useCallback((year: number) => {
+    setCurrentYear(year);
+
+    if (timelineTrackTimeout.current) {
+      clearTimeout(timelineTrackTimeout.current);
+    }
+
+    timelineTrackTimeout.current = setTimeout(() => {
+      track("timeline_year_changed", { year });
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timelineTrackTimeout.current) {
+        clearTimeout(timelineTrackTimeout.current);
+      }
+    };
+  }, []);
 
   const severityLabel = (severity: number) => {
     if (severity >= 5) return "Extreme";
@@ -726,6 +797,7 @@ export default function GlobeView() {
   };
 
   const sidebarWidth = 420;
+  const timelinePreviewYear = isDraggingDial ? targetYear : currentYear;
 
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden" }}>
@@ -849,12 +921,16 @@ export default function GlobeView() {
           }}
           onPointClick={async (point) => {
             const item = point as HotspotListItem;
-            track("hotspot_clicked", { hotspotId: item.id });
+            trackHotspotEvent("hotspot_selected", item, "globe");
             lastRequestedId.current = item.id;
             setLoadingDetail(true);
             try {
               const response = await fetch(`/api/hotspots/${item.id}`);
               if (!response.ok) {
+                track("hotspot_detail_load_failed", {
+                  hotspot_id: item.id,
+                  status: response.status,
+                });
                 if (lastRequestedId.current === item.id) {
                   setLoadingDetail(false);
                 }
@@ -866,8 +942,9 @@ export default function GlobeView() {
               setIsPanelOpen(true);
               setActiveTab("story");
               setLoadingDetail(false);
-              track("panel_opened", { hotspotId: item.id });
+              trackHotspotEvent("panel_opened", item, "globe");
             } catch {
+              track("hotspot_detail_load_failed", { hotspot_id: item.id });
               if (lastRequestedId.current === item.id) {
                 setLoadingDetail(false);
               }
@@ -978,6 +1055,9 @@ export default function GlobeView() {
           type="button"
           onClick={() => {
             setIsClimateClockOpen(true);
+            if (selectedHotspot && isPanelOpen) {
+              track("panel_closed", toHotspotAnalyticsProps(selectedHotspot));
+            }
             setIsPanelOpen(false);
             track("climate_clock_opened");
           }}
@@ -1137,7 +1217,12 @@ export default function GlobeView() {
             placeholder="Search hotspots..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
+            onFocus={() => {
+              if (!isSearchFocused) {
+                track("search_opened", { hotspot_count: hotspots.length });
+              }
+              setIsSearchFocused(true);
+            }}
             style={{
               flex: 1,
               backgroundColor: "transparent",
@@ -1750,7 +1835,7 @@ export default function GlobeView() {
       {!isPanelOpen && selectedHotspot && (
         <button
           type="button"
-          onClick={() => setIsPanelOpen(true)}
+          onClick={() => handlePanelOpen("sidebar_toggle")}
           style={{
             position: "absolute",
             top: "50%",
@@ -1816,8 +1901,8 @@ export default function GlobeView() {
           badgeLabel={severityLabel(selectedHotspot.severity)}
           badgeType={selectedHotspot.type}
           activeTab={activeTab}
-          onTabChange={(tab) => setActiveTab(tab)}
-          onClose={() => setIsPanelOpen(false)}
+          onTabChange={handleTabChange}
+          onClose={handlePanelClose}
           story={
             <div>
               <section style={{ padding: "20px 0" }}>
@@ -1986,26 +2071,44 @@ export default function GlobeView() {
               />
             );
           })()}
-          trends={
-            <div className="space-y-4">
-              <p className="text-sm text-gray-400">
-                Trend analysis for this hotspot will be available soon.
-              </p>
-              <div
-                style={{
-                  padding: 16,
-                  backgroundColor: "#252525",
-                  borderRadius: 8,
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                <p className="text-sm text-gray-300">
-                  This section will display historical trends, projections, and temporal patterns
-                  for {selectedHotspot.name}.
-                </p>
-              </div>
-            </div>
-          }
+          trends={(() => {
+            const trajectory = buildImpactTrajectory({
+              metrics: selectedHotspot.metrics,
+              severity: selectedHotspot.severity,
+              type: selectedHotspot.type,
+            });
+
+            if (!trajectory) {
+              return (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-400">
+                    No time-series metric is available for an impact trajectory yet.
+                  </p>
+                  <div
+                    style={{
+                      padding: 16,
+                      backgroundColor: "#252525",
+                      borderRadius: 8,
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    <p className="text-sm text-gray-300">
+                      Add a series metric for {selectedHotspot.name} to generate an illustrative
+                      projection to 2050.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <ImpactTrajectoryChart
+                trajectory={trajectory}
+                selectedYear={timelinePreviewYear}
+                accentColor={selectedHotspot.type === "driver" ? "#ff6b6b" : "#69b3ff"}
+              />
+            );
+          })()}
           layers={
             <div className="space-y-4">
               <p className="text-sm text-gray-400">
@@ -2052,8 +2155,9 @@ export default function GlobeView() {
                       className="underline decoration-gray-500 transition hover:text-white hover:decoration-gray-400"
                       onClick={() =>
                         track("source_clicked", {
-                          hotspotId: selectedHotspot.id,
-                          url: source.url,
+                          ...toHotspotAnalyticsProps(selectedHotspot),
+                          source_label: source.label,
+                          source_domain: getDomain(source.url),
                         })
                       }
                     >
@@ -2309,7 +2413,7 @@ export default function GlobeView() {
         targetYear={targetYear}
         isDragging={isDraggingDial}
         onInput={(year) => setTargetYear(year)}
-        onChange={(year) => setCurrentYear(year)}
+        onChange={handleTimelineYearChange}
         onDragStart={() => setIsDraggingDial(true)}
         onDragEnd={() => setIsDraggingDial(false)}
       />

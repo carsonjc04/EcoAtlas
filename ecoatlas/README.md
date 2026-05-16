@@ -25,7 +25,7 @@ https://ecoatlas-app.vercel.app
 | Styling | Tailwind CSS v4, Inter font |
 | UI Primitives | Radix UI (Tabs, ScrollArea, Separator) |
 | Data Validation | Zod |
-| Analytics | PostHog |
+| Analytics | Vercel Web Analytics |
 | Data Processing | Python (xarray, netCDF4) for EDGAR NetCDF files; Node.js scripts for NOAA/IEA ingestion |
 
 ## Data Sources
@@ -71,7 +71,7 @@ ecoatlas/
 │   ├── import_iea_methane_series.js
 │   └── edgar/                   # EDGAR NetCDF aggregation scripts
 └── lib/
-    ├── analytics.ts             # PostHog wrapper
+    ├── analytics.ts             # Vercel Analytics event helpers
     └── utils.ts
 ```
 
@@ -136,9 +136,30 @@ The countdown ticks every second. Clicking it opens a sidebar with a detailed br
 
 Built for Vercel. No environment variables are required for core functionality.
 
-Optional:
-- `NEXT_PUBLIC_POSTHOG_KEY` — PostHog project API key
-- `NEXT_PUBLIC_POSTHOG_HOST` — PostHog host (defaults to `https://app.posthog.com`)
+## Analytics
+
+EcoAtlas uses Vercel Web Analytics for privacy-friendly traffic analytics and custom
+interaction events. Enable Web Analytics for the project in the Vercel dashboard, then
+deploy the app; no app-level analytics environment variables are required.
+
+Vercel automatically tracks page views. Custom events cover the main user journey:
+
+- `globe_loaded`
+- `hotspot_selected`
+- `panel_opened`
+- `panel_closed`
+- `tab_changed`
+- `source_clicked`
+- `search_opened`
+- `search_result_selected`
+- `climate_clock_opened`
+- `menu_opened`
+- `timeline_year_changed`
+- `hotspots_load_failed`
+- `hotspot_detail_load_failed`
+
+Search analytics intentionally avoid collecting raw search queries. Hotspot events use
+stable properties such as hotspot id, name, type, severity, and interaction source.
 
 ## Notes
 
