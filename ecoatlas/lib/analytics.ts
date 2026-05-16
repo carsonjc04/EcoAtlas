@@ -2,7 +2,7 @@ import { track as vercelTrack } from "@vercel/analytics";
 
 type TrackProps = Record<string, string | number | boolean | null | undefined>;
 
-export type HotspotAnalyticsSource = "globe" | "search" | "sidebar_toggle";
+export type HotspotAnalyticsSource = "globe" | "search" | "sidebar_toggle" | "welcome_drivers";
 
 export type HotspotAnalyticsInput = {
   id: string;
@@ -50,6 +50,17 @@ type AnalyticsEventProperties = {
   hotspot_detail_load_failed: {
     hotspot_id: string;
     status?: number;
+  };
+  welcome_viewed: undefined;
+  welcome_start_clicked: undefined;
+  welcome_drivers_clicked: {
+    available: boolean;
+    hotspot_id?: string;
+    hotspot_name?: string;
+    severity?: number;
+  };
+  welcome_dismissed: {
+    method: "close" | "start" | "drivers";
   };
 };
 
