@@ -14,6 +14,7 @@ https://ecoatlas-app.vercel.app
 - A time slider ("Climate Time Machine") adjusts hotspot size and color across 1990–2050
 - A climate clock counts down the remaining carbon budget based on IPCC AR6 figures
 - Search bar for quick hotspot lookup with globe rotation to the selected location
+- First-visit welcome hero with clear CTAs into globe exploration
 
 ## Tech Stack
 
@@ -157,6 +158,10 @@ Vercel automatically tracks page views. Custom events cover the main user journe
 - `timeline_year_changed`
 - `hotspots_load_failed`
 - `hotspot_detail_load_failed`
+- `welcome_viewed`
+- `welcome_start_clicked`
+- `welcome_drivers_clicked`
+- `welcome_dismissed`
 
 Search analytics intentionally avoid collecting raw search queries. Hotspot events use
 stable properties such as hotspot id, name, type, severity, and interaction source.

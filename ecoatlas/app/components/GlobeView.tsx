@@ -7,9 +7,15 @@ import ImpactTrajectoryChart from "@/components/ImpactTrajectoryChart";
 import MetricCard from "@/components/MetricCard";
 import InfoTable from "@/components/InfoTable";
 import Sidebar from "@/components/Sidebar";
+import WelcomeOverlay from "./WelcomeOverlay";
 import { sourceMap } from "../../src/data/sourceMap";
 import { buildImpactTrajectory } from "../../lib/impactTrajectory";
-import { toHotspotAnalyticsProps, track, trackHotspotEvent } from "../../lib/analytics";
+import {
+  type HotspotAnalyticsSource,
+  toHotspotAnalyticsProps,
+  track,
+  trackHotspotEvent,
+} from "../../lib/analytics";
 import * as THREE from "three";
 
 type HotspotListItem = {
@@ -101,6 +107,7 @@ const FALLBACK_DEADLINE = new Date("2029-07-22T16:00:00+00:00");
 
 const CLIMATE_CLOCK_API = "https://api.climateclock.world/v2/clock.json";
 const MS_PER_YEAR = 1000 * 60 * 60 * 24 * 365.25;
+const WELCOME_DISMISSED_KEY = "ecoatlas_welcome_dismissed";
 
 function useClimateClock() {
   const [now, setNow] = useState(new Date());
@@ -493,6 +500,8 @@ export default function GlobeView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isWelcomeVisible, setIsWelcomeVisible] = useState(false);
+  const [hasCheckedWelcomeState, setHasCheckedWelcomeState] = useState(false);
   
   // Climate Time Machine state
   const [currentYear, setCurrentYear] = useState(2026);
@@ -500,6 +509,7 @@ export default function GlobeView() {
   const [isDraggingDial, setIsDraggingDial] = useState(false);
   
   const hasTrackedGlobeLoad = useRef(false);
+  const hasTrackedWelcomeView = useRef(false);
   const lastRequestedId = useRef<string | null>(null);
   const timelineTrackTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const globeRef = useRef<GlobeRef>(undefined);
@@ -519,14 +529,66 @@ export default function GlobeView() {
       )
     : [];
 
+  const highestSeverityDriver = hotspots
+    .filter((hotspot) => hotspot.type === "driver")
+    .sort((a, b) => b.severity - a.severity)[0];
+
+  const dismissWelcome = useCallback((method: "close" | "start" | "drivers") => {
+    window.localStorage.setItem(WELCOME_DISMISSED_KEY, "true");
+    setIsWelcomeVisible(false);
+    track("welcome_dismissed", { method });
+  }, []);
+
   const handlePanelOpen = useCallback(
-    (source: "globe" | "search" | "sidebar_toggle") => {
+    (source: HotspotAnalyticsSource) => {
       if (selectedHotspot) {
         trackHotspotEvent("panel_opened", selectedHotspot, source);
       }
       setIsPanelOpen(true);
     },
     [selectedHotspot]
+  );
+
+  const openHotspot = useCallback(
+    async (hotspot: HotspotListItem, source: HotspotAnalyticsSource) => {
+      if (globeRef.current) {
+        globeRef.current.pointOfView(
+          { lat: hotspot.lat, lng: hotspot.lng, altitude: 2 },
+          1000
+        );
+      }
+
+      trackHotspotEvent("hotspot_selected", hotspot, source);
+      lastRequestedId.current = hotspot.id;
+      setLoadingDetail(true);
+      try {
+        const response = await fetch(`/api/hotspots/${hotspot.id}`);
+        if (!response.ok) {
+          track("hotspot_detail_load_failed", {
+            hotspot_id: hotspot.id,
+            status: response.status,
+          });
+          if (lastRequestedId.current === hotspot.id) {
+            setLoadingDetail(false);
+          }
+          return;
+        }
+        const detail = (await response.json()) as HotspotDetail;
+        if (lastRequestedId.current !== hotspot.id) return;
+        setSelectedHotspot(detail);
+        setIsPanelOpen(true);
+        setIsClimateClockOpen(false);
+        setActiveTab("story");
+        setLoadingDetail(false);
+        trackHotspotEvent("panel_opened", hotspot, source);
+      } catch {
+        track("hotspot_detail_load_failed", { hotspot_id: hotspot.id });
+        if (lastRequestedId.current === hotspot.id) {
+          setLoadingDetail(false);
+        }
+      }
+    },
+    []
   );
 
   const handlePanelClose = useCallback(() => {
@@ -554,51 +616,34 @@ export default function GlobeView() {
     async (hotspot: HotspotListItem) => {
       setSearchQuery("");
       setIsSearchFocused(false);
-
-      // Rotate globe to the hotspot location
-      if (globeRef.current) {
-        globeRef.current.pointOfView(
-          { lat: hotspot.lat, lng: hotspot.lng, altitude: 2 },
-          1000
-        );
-      }
-
-      // Fetch hotspot details and open sidebar
-      trackHotspotEvent("hotspot_selected", hotspot, "search");
       track("search_result_selected", {
         ...toHotspotAnalyticsProps(hotspot, "search"),
         result_count: searchResults.length,
       });
-      lastRequestedId.current = hotspot.id;
-      setLoadingDetail(true);
-      try {
-        const response = await fetch(`/api/hotspots/${hotspot.id}`);
-        if (!response.ok) {
-          track("hotspot_detail_load_failed", {
-            hotspot_id: hotspot.id,
-            status: response.status,
-          });
-          if (lastRequestedId.current === hotspot.id) {
-            setLoadingDetail(false);
-          }
-          return;
-        }
-        const detail = (await response.json()) as HotspotDetail;
-        if (lastRequestedId.current !== hotspot.id) return;
-        setSelectedHotspot(detail);
-        setIsPanelOpen(true);
-        setActiveTab("story");
-        setLoadingDetail(false);
-        trackHotspotEvent("panel_opened", hotspot, "search");
-      } catch {
-        track("hotspot_detail_load_failed", { hotspot_id: hotspot.id });
-        if (lastRequestedId.current === hotspot.id) {
-          setLoadingDetail(false);
-        }
-      }
+
+      await openHotspot(hotspot, "search");
     },
-    [searchResults.length]
+    [openHotspot, searchResults.length]
   );
+
+  const handleStartExploring = useCallback(() => {
+    track("welcome_start_clicked");
+    dismissWelcome("start");
+  }, [dismissWelcome]);
+
+  const handleSeeDrivers = useCallback(async () => {
+    track("welcome_drivers_clicked", {
+      available: !!highestSeverityDriver,
+      hotspot_id: highestSeverityDriver?.id,
+      hotspot_name: highestSeverityDriver?.name,
+      severity: highestSeverityDriver?.severity,
+    });
+    dismissWelcome("drivers");
+
+    if (highestSeverityDriver) {
+      await openHotspot(highestSeverityDriver, "welcome_drivers");
+    }
+  }, [dismissWelcome, highestSeverityDriver, openHotspot]);
 
   // Close search dropdown when clicking outside
   useEffect(() => {
@@ -609,6 +654,19 @@ export default function GlobeView() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const hasDismissedWelcome =
+      window.localStorage.getItem(WELCOME_DISMISSED_KEY) === "true";
+
+    setIsWelcomeVisible(!hasDismissedWelcome);
+    setHasCheckedWelcomeState(true);
+
+    if (!hasDismissedWelcome && !hasTrackedWelcomeView.current) {
+      track("welcome_viewed");
+      hasTrackedWelcomeView.current = true;
+    }
   }, []);
 
   // Track window size so the globe fills the screen.
@@ -921,34 +979,7 @@ export default function GlobeView() {
           }}
           onPointClick={async (point) => {
             const item = point as HotspotListItem;
-            trackHotspotEvent("hotspot_selected", item, "globe");
-            lastRequestedId.current = item.id;
-            setLoadingDetail(true);
-            try {
-              const response = await fetch(`/api/hotspots/${item.id}`);
-              if (!response.ok) {
-                track("hotspot_detail_load_failed", {
-                  hotspot_id: item.id,
-                  status: response.status,
-                });
-                if (lastRequestedId.current === item.id) {
-                  setLoadingDetail(false);
-                }
-                return;
-              }
-              const detail = (await response.json()) as HotspotDetail;
-              if (lastRequestedId.current !== item.id) return;
-              setSelectedHotspot(detail);
-              setIsPanelOpen(true);
-              setActiveTab("story");
-              setLoadingDetail(false);
-              trackHotspotEvent("panel_opened", item, "globe");
-            } catch {
-              track("hotspot_detail_load_failed", { hotspot_id: item.id });
-              if (lastRequestedId.current === item.id) {
-                setLoadingDetail(false);
-              }
-            }
+            await openHotspot(item, "globe");
           }}
         />
         {(loadingHotspots || errorHotspots) && (
@@ -969,6 +1000,15 @@ export default function GlobeView() {
           </div>
         )}
       </div>
+
+      {hasCheckedWelcomeState && isWelcomeVisible && (
+        <WelcomeOverlay
+          onStartExploring={handleStartExploring}
+          onSeeDrivers={handleSeeDrivers}
+          onDismiss={() => dismissWelcome("close")}
+          isDriverCtaDisabled={loadingHotspots || !highestSeverityDriver}
+        />
+      )}
 
       {/* Persistent Eco Atlas header - always visible */}
       <div
@@ -1103,6 +1143,7 @@ export default function GlobeView() {
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ fontSize: 14 }}>🕒</span>
             <span
+              suppressHydrationWarning
               style={{
                 fontSize: 13,
                 fontWeight: 700,
@@ -2257,6 +2298,7 @@ export default function GlobeView() {
                 Time Remaining
               </div>
               <div
+                suppressHydrationWarning
                 style={{
                   fontSize: 36,
                   fontWeight: 700,
@@ -2269,6 +2311,7 @@ export default function GlobeView() {
                 {climateClock.remainingTime.years}y {climateClock.remainingTime.days}d
               </div>
               <div
+                suppressHydrationWarning
                 style={{
                   fontSize: 24,
                   fontWeight: 600,
@@ -2326,7 +2369,9 @@ export default function GlobeView() {
                   </span>
                 </div>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "#ef4444" }}>
+                  <span suppressHydrationWarning>
                   {climateClock.remainingBudgetGt.toFixed(1)} Gt CO₂
+                  </span>
                 </div>
                 <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
                   To stay below 1.5°C warming (50% chance)
